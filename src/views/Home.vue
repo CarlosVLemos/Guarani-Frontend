@@ -11,12 +11,10 @@ import Footer from '@/components/layout/Footer.vue';
   <div>
     <NavBar />
     <main>
-      <v-container fluid>
-        <Hero />
-        <Features />
-        <About />
-        <CTA />
-      </v-container>
+      <Hero />
+      <Features />
+      <About />
+      <CTA />
     </main>
     <Footer />
   </div>
