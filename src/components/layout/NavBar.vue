@@ -2,13 +2,14 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiLeaf, mdiChevronDown } from '@mdi/js';
-import { authStore } from '@/stores/auth';
+import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'vue-router';
 import { useTheme } from '@/composables/useTheme';
 import { navItems } from '@/config/navigation';
 import ThemeToggleButton from '@/components/ui/ThemeToggleButton.vue';
 import MobileNavDrawer from '@/components/layout/MobileNavDrawer.vue';
 
+const authStore = useAuthStore();
 const { isDark, loadThemePreference } = useTheme();
 const router = useRouter();
 
