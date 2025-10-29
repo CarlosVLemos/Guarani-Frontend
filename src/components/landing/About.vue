@@ -1,13 +1,11 @@
 <template>
   <section id="about">
-    <v-container>
-      <v-row>
-        <v-col class="text-center">
-          <h2 class="text-h3 font-weight-bold mb-8">About Us</h2>
-          <p>We are a team of passionate developers.</p>
-        </v-col>
-      </v-row>
-    </v-container>
+    <v-row>
+      <v-col class="text-center">
+        <h2 class="text-h3 font-weight-bold mb-8">About Us</h2>
+        <p>We are a team of passionate developers.</p>
+      </v-col>
+    </v-row>
   </section>
 </template>
 

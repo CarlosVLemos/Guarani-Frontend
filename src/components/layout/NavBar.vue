@@ -65,7 +65,7 @@ onUnmounted(() => {
     class="navbar-container"
     :class="{ 'scrolled': scrolled }"
   >
-    <v-container class="d-flex align-center justify-space-between px-4">
+    <v-container fluid class="d-flex align-center justify-space-between px-4">
       <!-- Logo -->
       <div class="d-flex align-center">
         <div class="logo-background mr-3">
