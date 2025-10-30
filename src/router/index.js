@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
+import Dashboard from '../views/Dashboard.vue'; 
 
 const routes = [
   {
@@ -21,6 +22,11 @@ const routes = [
     component: () => import('../components/forms/RegisterForm.vue'),
     props: true // Passa os parâmetros da rota (userType) como props para o componente
   },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('../views/Dashboard.vue'),
+  }
 ];
 
 const router = createRouter({
