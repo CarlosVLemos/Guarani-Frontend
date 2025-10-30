@@ -1,73 +1,108 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div v-if="project" class="bg-white shadow-md rounded-lg p-8">
-      <h1 class="text-4xl font-bold mb-6">{{ project.title }}</h1>
-      <p class="text-gray-700 text-lg mb-8">{{ project.description }}</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <h2 class="text-2xl font-semibold mb-4">Detalhes do Projeto</h2>
-          <ul class="space-y-2">
-            <li><strong>ID do Projeto:</strong> {{ project.id }}</li>
-            <li><strong>Status:</strong> <span class="text-yellow-500 font-semibold">{{ project.status }}</span></li>
-            <li><strong>Orçamento:</strong> {{ project.budget }}</li>
-            <li><strong>Data de Início:</strong> {{ project.startDate }}</li>
-            <li><strong>Data de Término:</strong> {{ project.endDate }}</li>
-          </ul>
-        </div>
-        <div>
-          <h2 class="text-2xl font-semibold mb-4">Organização</h2>
-          <div class="flex items-center">
-            <img :src="project.organization.logo" alt="Logo da Organização" class="w-16 h-16 rounded-full mr-4">
-            <div>
-              <h3 class="text-xl font-medium">{{ project.organization.name }}</h3>
-              <p class="text-gray-600">{{ project.organization.location }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-12">
-        <h2 class="text-2xl font-semibold mb-4">Ações</h2>
-        <div class="flex space-x-4">
-          <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg">Aprovar Projeto</button>
-          <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg">Rejeitar Projeto</button>
-        </div>
-      </div>
+  <v-container>
+    <v-card v-if="project">
+      <v-card-title class="text-h4">{{ project.title }}</v-card-title>
+      <v-card-text>
+        <p class="text-body-1 mb-4">{{ project.description }}</p>
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>ID do Projeto</v-list-item-title>
+                <v-list-item-subtitle>{{ project.id }}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>Status</v-list-item-title>
+                <v-list-item-subtitle>
+                  <v-chip :color="statusColor(project.status)" dark>{{ project.status }}</v-chip>
+                </v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>Orçamento</v-list-item-title>
+                <v-list-item-subtitle>{{ project.budget }}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>Data de Início</v-list-item-title>
+                <v-list-item-subtitle>{{ project.start_date }}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>Data de Término</v-list-item-title>
+                <v-list-item-subtitle>{{ project.end_date }}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="success" @click="approveProject">Aprovar</v-btn>
+        <v-btn color="error" @click="rejectProject">Rejeitar</v-btn>
+      </v-card-actions>
+    </v-card>
+    <div v-else class="text-center">
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
-    <div v-else class="text-center text-gray-500 mt-16">
-      <p>Carregando detalhes do projeto...</p>
-    </div>
-  </div>
+  </v-container>
 </template>
 
-<script>
-export default {
-  name: 'ProjectDetails',
-  data() {
-    return {
-      project: null,
-    };
-  },
-  created() {
-    // Simula a busca de dados do projeto com base no ID da rota
-    const projectId = this.$route.params.id;
-    // Em um aplicativo real, você faria uma chamada de API aqui
-    this.project = {
-      id: projectId,
-      title: 'Projeto de Reflorestamento na Amazônia',
-      description: 'Este projeto visa restaurar uma área degradada da Floresta Amazônica através do plantio de 1 milhão de árvores de espécies nativas. A iniciativa também inclui programas de educação ambiental para a comunidade local e monitoramento da fauna e flora da região.',
-      status: 'Pendente',
-      budget: 'R$ 500.000,00',
-      startDate: '01/01/2024',
-      endDate: '31/12/2025',
-      organization: {
-        name: 'Amazônia Viva',
-        location: 'Manaus, AM',
-        logo: 'https://via.placeholder.com/150',
-      },
-    };
-  },
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { getProjectById, updateProject } from '@/api/projects';
+
+const route = useRoute();
+const project = ref(null);
+
+const fetchProject = async () => {
+  try {
+    const response = await getProjectById(route.params.id);
+    project.value = response.data;
+  } catch (error) {
+    console.error('Erro ao buscar detalhes do projeto:', error);
+  }
+};
+
+onMounted(fetchProject);
+
+const approveProject = async () => {
+  try {
+    await updateProject(project.value.id, { status: 'approved' });
+    // Optionally, you can show a success message and navigate back to the admin page
+  } catch (error) {
+    console.error('Erro ao aprovar o projeto:', error);
+  }
+};
+
+const rejectProject = async () => {
+  try {
+    await updateProject(project.value.id, { status: 'rejected' });
+    // Optionally, you can show a success message and navigate back to the admin page
+  } catch (error) {
+    console.error('Erro ao rejeitar o projeto:', error);
+  }
+};
+
+const statusColor = (status) => {
+  switch (status) {
+    case 'pending':
+      return 'yellow-darken-3';
+    case 'approved':
+      return 'green-darken-3';
+    case 'rejected':
+      return 'red-darken-3';
+    default:
+      return 'grey-darken-3';
+  }
 };
 </script>
 
