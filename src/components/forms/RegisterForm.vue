@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { register } from '@/api/auth';
 
 // O router passa 'userType' como uma prop.
 const props = defineProps({
@@ -13,15 +14,21 @@ const props = defineProps({
 
 const router = useRouter();
 
+const loading = ref(false);
+const error = ref(null);
+
 // Reatividade para os campos do formulário
 const formData = ref({
-  fullName: '',
+  contact_name: '',
   email: '',
   password: '',
   confirmPassword: '',
   // Campos específicos
-  companyName: '', // para ofertante
-  cnpj: '',        // para ofertante
+  organization_name: '', // para ofertante
+  cnpj: '', // para ofertante
+  contact_position: '', // para ofertante
+  phone: '', // para ofertante
+  organization_type: '', // para ofertante
   projectInterests: '', // para comprador
 });
 
@@ -29,13 +36,74 @@ const formTitle = computed(() =>
   props.userType === 'comprador' ? 'Registro de Comprador' : 'Registro de Ofertante'
 );
 
-const handleRegister = () => {
-  console.log(`Registrando novo ${props.userType}:`, formData.value);
-  // Aqui você chamaria sua API de registro
-  // Ex: await authApi.register(formData.value, props.userType);
-  
-  // Após o sucesso, redirecionar para o login ou dashboard
-  router.push(`/login/${props.userType}`);
+const handleRegister = async () => {
+  loading.value = true;
+  error.value = null;
+
+  if (formData.value.password !== formData.value.confirmPassword) {
+    error.value = 'As senhas não coincidem.';
+    loading.value = false;
+    return;
+  }
+
+  let payload;
+  const userTypeUpper = props.userType.toUpperCase();
+
+  if (props.userType === 'ofertante') {
+    payload = {
+      email: formData.value.email,
+      password: formData.value.password,
+      user_type: userTypeUpper,
+      ofertante_profile: {
+        contact_name: formData.value.contact_name,
+        organization_name: formData.value.organization_name,
+        cnpj: formData.value.cnpj,
+        contact_position: formData.value.contact_position,
+        phone: formData.value.phone,
+        organization_type: formData.value.organization_type,
+      }
+    };
+  } else { // comprador
+    payload = {
+      email: formData.value.email,
+      password: formData.value.password,
+      user_type: userTypeUpper,
+      comprador_profile: {
+        contact_name: formData.value.contact_name,
+        project_interests: formData.value.projectInterests,
+      }
+    };
+  }
+
+  console.log(`Tentando registrar novo ${props.userType} com:`, payload);
+
+  try {
+    const response = await register(payload); // A API de registro agora não precisa do userType
+    console.log('✅ Registro bem-sucedido! Resposta da API:', response.data);
+
+    // Após o sucesso, redirecionar para o login
+    router.push(`/login/${props.userType}`);
+  } catch (err) {
+    console.error('❌ Erro no registro:', err.response?.data || err.message);
+
+    // Função para encontrar a primeira mensagem de erro, mesmo que esteja aninhada
+    const findFirstError = (errors) => {
+      if (!errors || typeof errors !== 'object') return null;
+      const keys = Object.keys(errors);
+      if (!keys.length) return null;
+
+      const firstKey = keys[0];
+      const firstValue = errors[firstKey];
+
+      if (Array.isArray(firstValue) && typeof firstValue[0] === 'string') return firstValue[0];
+      return findFirstError(firstValue);
+    };
+
+    const responseData = err.response?.data;
+    error.value = findFirstError(responseData) || 'Ocorreu um erro ao registrar. Verifique os dados e tente novamente.';
+  } finally {
+    loading.value = false;
+  }
 };
 
 const goToLogin = () => {
@@ -59,8 +127,8 @@ const goToLogin = () => {
             <v-form @submit.prevent="handleRegister">
               <!-- Campos Comuns -->
               <v-text-field
-                v-model="formData.fullName"
-                label="Nome Completo"
+                v-model="formData.contact_name"
+                label="Nome do Contato"
                 prepend-inner-icon="mdi-account"
                 variant="outlined"
                 required
@@ -98,8 +166,8 @@ const goToLogin = () => {
               <!-- Campos Condicionais para Ofertante -->
               <template v-if="userType === 'ofertante'">
                 <v-text-field
-                  v-model="formData.companyName"
-                  label="Nome da Empresa"
+                  v-model="formData.organization_name"
+                  label="Nome da Organização/Empresa"
                   prepend-inner-icon="mdi-domain"
                   variant="outlined"
                 ></v-text-field>
@@ -108,6 +176,27 @@ const goToLogin = () => {
                   label="CNPJ"
                   prepend-inner-icon="mdi-card-account-details"
                   variant="outlined"
+                ></v-text-field>
+                <v-text-field
+                  v-model="formData.contact_position"
+                  label="Cargo do Contato"
+                  prepend-inner-icon="mdi-briefcase"
+                  variant="outlined"
+                  required
+                ></v-text-field>
+                <v-text-field
+                  v-model="formData.phone"
+                  label="Telefone"
+                  prepend-inner-icon="mdi-phone"
+                  variant="outlined"
+                  required
+                ></v-text-field>
+                <v-text-field
+                  v-model="formData.organization_type"
+                  label="Tipo de Organização"
+                  prepend-inner-icon="mdi-office-building"
+                  variant="outlined"
+                  required
                 ></v-text-field>
               </template>
 
@@ -122,13 +211,20 @@ const goToLogin = () => {
                 ></v-textarea>
               </template>
 
+              <!-- Exibição de Erro -->
+              <v-alert v-if="error" type="error" density="compact" class="mt-4 mb-2">
+                {{ error }}
+              </v-alert>
+
               <v-btn
                 type="submit"
                 color="primary"
                 block
                 large
                 class="mt-6"
+                :disabled="loading"
               >
+                <v-progress-circular v-if="loading" indeterminate size="24" class="mr-2" />
                 Registrar
               </v-btn>
             </v-form>
