@@ -21,6 +21,16 @@ const routes = [
     component: () => import('../components/forms/RegisterForm.vue'),
     props: true // Passa os parâmetros da rota (userType) como props para o componente
   },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('../views/Admin.vue'),
+  },
+  {
+    path: '/project/:id',
+    name: 'ProjectDetails',
+    component: () => import('../views/ProjectDetails.vue'),
+  },
 ];
 
 const router = createRouter({

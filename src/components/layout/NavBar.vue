@@ -134,6 +134,7 @@ onUnmounted(() => {
         </template>
 
         <template v-if="authStore.user">
+          <v-btn v-if="authStore.user.is_superuser" class="btn btn--primary mr-3" rounded elevation="2" to="/admin">Admin</v-btn>
           <v-btn class="btn btn--primary mr-3" rounded elevation="2" to="/projects">Meus Projetos</v-btn>
           <v-btn class="btn btn--primary-variant mr-3" rounded elevation="2" to="/create-project">Criar Projeto</v-btn>
           <v-btn variant="outlined" class="btn btn--secondary ml-3" @click="handleLogout">Sair</v-btn>
