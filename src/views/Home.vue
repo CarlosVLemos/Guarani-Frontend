@@ -11,9 +11,9 @@ import Footer from '@/components/layout/Footer.vue';
   <div>
     <NavBar />
     <main>
-      <Hero />
-      <Features />
-      <About />
+      <Hero id="hero"/>
+      <Features id="features" />
+      <About id="about"/>
       <CTA />
     </main>
     <Footer />
