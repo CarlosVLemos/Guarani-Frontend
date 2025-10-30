@@ -34,14 +34,14 @@ const handleLogin = async () => {
   loading.value = true;
   error.value = null;
   console.log(`Tentando login com:`, { email: formData.value.email });
+  const credentials = { email: formData.value.email, password: formData.value.password };
+  console.log(`Tentando login com:`, credentials);
   try {
     const credentials = { email: formData.value.email, password: formData.value.password };
     const response = await login(credentials);
 
     console.log('✅ Login bem-sucedido! Resposta da API:', response.data);
-    authStore.login(response.data); // Salva os dados do usuário na store
-
-    router.push('/'); // Redireciona para a home
+    router.push('/'); // Redireciona para a home após o login
   } catch (err) {
     console.error('❌ Erro no login:', err.response?.data || err.message);
     error.value = 'E-mail ou senha inválidos. Tente novamente.';
