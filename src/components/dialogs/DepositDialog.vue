@@ -11,15 +11,14 @@
         Depositar Créditos
       </v-card-title>
       <v-card-text>
-        <v-text-field
-          v-model="depositAmount"
+        <v-number-input
+        v-model="depositAmount"
+          :reverse="false"
+          controlVariant="split"
           label="Valor (R$)"
-          type="number"
-          min="0"
-          class="deposit-input"
-          color="primary"
-          variant="outlined"
-          rounded
+          :hideInput="false"
+          :inset="false"
+          :precision="2"
         />
         <div class="text-caption mt-2 info-text">
           Esse é um flow de demonstração — integrar com API depois.
@@ -28,19 +27,21 @@
       <v-card-actions>
         <v-spacer />
         <v-btn text class="cancel-btn" @click="close">Cancelar</v-btn>
-        <v-btn  class="confirm-btn" rounded elevation="2" @click="confirm">Confirmar</v-btn>
+        <v-btn class="confirm-btn" rounded elevation="2" @click="confirm"
+          >Confirmar</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 const props = defineProps({ modelValue: Boolean });
-const emit = defineEmits(['update:modelValue', 'deposit']);
+const emit = defineEmits(["update:modelValue", "deposit"]);
 const depositAmount = ref(null);
-const close = () => emit('update:modelValue', false);
+const close = () => emit("update:modelValue", false);
 const confirm = () => {
-  emit('deposit', Number(depositAmount.value) || 0);
+  emit("deposit", Number(depositAmount.value) || 0);
   close();
 };
 </script>
@@ -52,7 +53,7 @@ const confirm = () => {
 .dialog-card {
   border-radius: 18px;
   box-shadow: 0 2px 16px rgba(0, 229, 208, 0.12);
-  border: 1px solid #00E5D0;
+  border: 1px solid #00e5d0;
 }
 .dialog-title {
   font-weight: 600;
@@ -65,14 +66,14 @@ const confirm = () => {
   margin-top: 12px;
 }
 .info-text {
-  color: #00CFC7;
+  color: #00cfc7;
 }
 .cancel-btn {
   color: #004d4a;
   font-weight: 500;
 }
 .confirm-btn {
-  background: linear-gradient(135deg, #00E5D0, #00CFC7);
+  background: linear-gradient(135deg, #00e5d0, #00cfc7);
   color: #fff;
   font-weight: 600;
 }

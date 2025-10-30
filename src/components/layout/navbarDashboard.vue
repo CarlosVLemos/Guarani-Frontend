@@ -12,11 +12,9 @@ const authStore = useAuthStore();
 const { isDark, loadThemePreference } = useTheme();
 const router = useRouter();
 
-// Estado reativo
 const scrolled = ref(false);
-const drawer = ref(false); // Controla a visibilidade do drawer
+const drawer = ref(false);
 
-// Métodos
 const handleScroll = () => {
   scrolled.value = window.scrollY > 50;
 };
@@ -32,7 +30,6 @@ const navigateTo = (path) => {
   drawer.value = false;
 };
 
-// Hooks do ciclo de vida
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
   loadThemePreference();
@@ -45,10 +42,10 @@ onUnmounted(() => {
 
 <template>
   <v-app-bar
-    elevation="0"
+    app
+    elevation="1"
     color="surface"
     class="navbar-container"
-    :class="{ 'scrolled': scrolled }"
   >
     <v-container fluid class="d-flex align-center justify-space-between px-4">
       <!-- Logo -->
@@ -59,7 +56,7 @@ onUnmounted(() => {
         <v-toolbar-title class="brand-name">Guarani Dashboard</v-toolbar-title>
       </div>
       
-      <!-- Ações do Dashboard Desktop -->
+      <!-- Ações Desktop -->
       <div class="d-none d-md-flex align-center">
         <template v-if="authStore.user">
           <div class="user-info mr-4">
@@ -83,7 +80,7 @@ onUnmounted(() => {
     </v-container>
   </v-app-bar>
 
-  <!-- Drawer Mobile simplificado -->
+  <!-- Drawer Mobile -->
   <MobileNavDrawer 
     v-model="drawer" 
     :auth-store="authStore"
@@ -97,20 +94,15 @@ onUnmounted(() => {
 <style scoped>
 .navbar-container {
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #00BAB4 !important; /* Turquesa vibrante */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-  z-index: 2000; 
-  overflow: visible !important;
+  background: #00BAB4 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important; 
+  transition: background 0.3s;
+  z-index: 2000;
 }
-
 .navbar-container.scrolled {
-  background: #008B87 !important; /* Turquesa mais escuro ao rolar */
+  background: #008B87 !important;
   box-shadow: 0 4px 20px rgba(0, 186, 180, 0.3) !important;
 }
-
-/* Logo e brand name */
 .logo-background {
   width: 40px;
   height: 40px;
@@ -119,118 +111,25 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
-
-.logo-background::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.5s;
-}
-
 .logo-background:hover {
   transform: scale(1.05) rotate(5deg);
   box-shadow: 0 8px 25px rgba(0, 186, 180, 0.4);
 }
-
-.logo-background:hover::before {
-  left: 100%;
-}
-
 .leaf-icon {
-  color: #ffffff;
+  color: #fff;
   font-size: 24px;
-  transition: all 0.3s ease;
 }
-
 .brand-name {
   background: linear-gradient(135deg, #ffffff, #e0f7f5);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
   font-weight: 700;
   font-size: 24px;
   letter-spacing: -0.5px;
-  transition: all 0.3s ease;
 }
-
-/* Menu de Navegação Desktop */
-.navigation-menu {
-  display: flex;
-  gap: 8px;
-}
-
-/* Links da navegação em branco */
-:deep(.nav-link) {
-  color: rgba(255, 255, 255, 0.95) !important;
-  font-weight: 500;
-}
-
-:deep(.nav-link:hover) {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Botões ajustados */
-:deep(.btn--secondary) {
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  color: white !important;
-  font-weight: 500;
-}
-
-:deep(.btn--secondary:hover) {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  border-color: white !important;
-}
-
-:deep(.btn--primary) {
-  background: linear-gradient(135deg, #00E5D0, #00CFC7) !important;
-  color: #fff !important;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 229, 208, 0.3);
-}
-
-:deep(.btn--primary:hover) {
-  background: linear-gradient(135deg, #00FFF0, #00E5D0) !important;
-  box-shadow: 0 4px 12px rgba(0, 229, 208, 0.5);
-}
-
-/* Ícone mobile */
-.mobile-menu-icon {
-  color: white !important;
-}
-
-.mobile-menu-icon:hover {
-  transform: rotate(90deg);
-  color: #00E5D0 !important;
-}
-
-/* Ajustes Responsivos */
-@media (max-width: 960px) {
-  .brand-name { font-size: 20px; }
-  .logo-background { width: 36px; height: 36px; }
-  .leaf-icon { font-size: 20px; }
-}
-
-.v-container { max-width: 1200px; }
-
-* {
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 0.3s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logo-background, .nav-link {
-  transition-property: all;
-}
-
 .user-info {
   display: flex;
   align-items: center;
@@ -240,5 +139,36 @@ onUnmounted(() => {
   color: #fff;
   font-weight: 500;
   font-size: 16px;
+}
+.btn--primary {
+  background: linear-gradient(135deg, #00E5D0, #00CFC7) !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 229, 208, 0.3);
+}
+.btn--primary:hover {
+  background: linear-gradient(135deg, #00FFF0, #00E5D0) !important;
+  box-shadow: 0 4px 12px rgba(0, 229, 208, 0.5);
+}
+.btn--secondary {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: white !important;
+  font-weight: 500;
+}
+.btn--secondary:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: white !important;
+}
+.mobile-menu-icon {
+  color: white !important;
+}
+.mobile-menu-icon:hover {
+  transform: rotate(90deg);
+  color: #00E5D0 !important;
+}
+@media (max-width: 960px) {
+  .brand-name { font-size: 20px; }
+  .logo-background { width: 36px; height: 36px; }
+  .leaf-icon { font-size: 20px; }
 }
 </style>

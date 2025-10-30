@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import Dashboard from '../views/Dashboard.vue'; 
+import { useAuthStore } from '../store/auth';
 
 const routes = [
   {
@@ -25,7 +26,8 @@ const routes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: () => import('../views/Dashboard.vue'),
+    component: Dashboard,
+    // meta: { requiresAuth: true } // Rota protegida
   }
 ];
 
@@ -33,5 +35,15 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+// // Guard genérico para rotas protegidas
+// router.beforeEach((to, from, next) => {
+//   const authStore = useAuthStore();
+//   if (to.meta.requiresAuth && !authStore.user) {
+//     next({ name: 'Login', params: { userType: 'comprador' } });
+//   } else {
+//     next();
+//   }
+// });
 
 export default router;
