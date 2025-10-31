@@ -35,13 +35,14 @@ const props = defineProps({ transactions: Array });
 const transactions = props.transactions && props.transactions.length ? props.transactions : mockTransactions;
 
 const headers = [
-  { text: 'Data', value: 'date' },
-  { text: 'Tipo', value: 'type' },
-  { text: 'Valor', value: 'amount' },
-  { text: 'Descrição', value: 'description' },
+  { title: 'Data', value: 'date' },
+  { title: 'Tipo', value: 'type' },
+  { title: 'Valor', value: 'amount' },
+  { title: 'Descrição', value: 'description' },
 ];
 </script>
 <style scoped>
+
 .history-card {
   border-radius: 18px;
   box-shadow: 0 2px 16px rgba(0, 229, 208, 0.12);
@@ -52,4 +53,14 @@ const headers = [
 .withdraw { color: #e53935; font-weight: 600; }
 .table-wrapper { width: 100%; overflow-x: auto; }
 .info-text { color: #00CFC7; }
+
+.v-data-table-header,
+.v-data-table thead {
+  background: transparent !important;
+  color: #004d4a !important;
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 1px solid #00E5D0;
+  z-index: 1;
+}
 </style>

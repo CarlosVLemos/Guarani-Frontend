@@ -4,6 +4,7 @@
     <Line :data="chartData" :options="chartOptions" />
   </v-card>
 </template>
+
 <script setup>
 import { Line } from 'vue-chartjs'
 import { Chart, registerables } from 'chart.js'
@@ -34,7 +35,7 @@ const chartData = computed(() => ({
 }))
 
 const chartOptions = {
-  responsive: true,
+  mdiResponsive: true,
   scales: {
     x: { ticks: { color: '#00CFC7', font: { size: 11 } }, grid: { color: '#e0f7fa' } },
     y: { beginAtZero: true, ticks: { color: '#004d4a', font: { size: 11 } }, grid: { color: '#e0f7fa' } }
@@ -43,15 +44,14 @@ const chartOptions = {
 </script>
 
 <style scoped>
+
 .chart-card {
   border-radius: 18px;
   box-shadow: 0 2px 16px rgba(0, 229, 208, 0.12);
   border: 1px solid #00E5D0;
   background: rgba(0, 229, 208, 0.04);
-  
+  flex: 1;
 }
 
-.chart-card canvas {
-  max-height: 150px;
-}
+
 </style>

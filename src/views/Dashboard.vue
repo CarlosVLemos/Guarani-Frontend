@@ -22,33 +22,19 @@
       </div>
       <UserProfile :user="user" class="mb-6" />
       <WalletSummary :wallet="wallet" />
-      <WalletChart :data="chartData" class="mb-6" />
 
+      <div class="dashboard-row">
+        <!-- Gráfico de evolução do saldo -->
+        <WalletChart :data="chartData" />
+
+        <!-- Histórico de transações -->
+        <TransactionHistory :transactions="transactions" />
+      </div>
+      
       <!-- Projetos do ofertante ou projetos comprados pelo comprador -->
-      <ProjectsTable v-if="projects.length" :projects="projects" :headers="headers" @open="openProject" @edit="editProject" />
+      <ProjectsTable />
 
-      <!-- Histórico de transações -->
-      <TransactionHistory :transactions="transactions" class="mt-6" />
-
-      <!-- Exibir dados extras conforme tipo -->
-      <div v-if="user.user_type === 'comprador'">
-        <h3 class="mt-8 mb-2">Metas e Preferências</h3>
-        <div v-if="requirements">
-          <p>Meta de carbono: {{ requirements.meta_carbono }}</p>
-          <p>Orçamento: R$ {{ requirements.orcamento }}</p>
-          <p>Preferências: {{ requirements.preferencias }}</p>
-        </div>
-        <h3 class="mt-8 mb-2">Documentos de Sustentabilidade</h3>
-        <ul>
-          <li v-for="doc in documents" :key="doc.id">{{ doc.tipo }} - {{ doc.nome }}</li>
-        </ul>
-      </div>
-      <div v-else>
-        <h3 class="mt-8 mb-2">Documentos do Ofertante</h3>
-        <ul>
-          <li v-for="doc in documents" :key="doc.id">{{ doc.tipo }} - {{ doc.nome }}</li>
-        </ul>
-      </div>
+      <UserExtras :user="user" :requirements="requirements" :documents="documents" />
 
       <DepositDialog v-model="depositDialog" @deposit="confirmDeposit" />
     </v-container>
@@ -67,6 +53,7 @@ import NavbarDashboard from '@/components/layout/NavbarDashboard.vue';
 import UserProfile from '@/components/layout/UserProfile.vue';
 import WalletChart from '@/components/layout/WalletChart.vue';
 import TransactionHistory from '@/components/layout/TransactionHistory.vue';
+import UserExtras from '../components/layout/UserExtras.vue';
 import { useAuthStore } from '@/store/auth';
 
 // APIs
@@ -79,7 +66,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const user = computed(() => authStore.user || { name: 'Usuário', email: 'user@email.com', role: 'ofertante', user_type: 'ofertante' });
-const wallet = computed(() => authStore.wallet || { saldo: 12.90, totalComprado: 23.00, totalGasto: 200.50 });
+const wallet = computed(() => authStore.wallet || { saldo: 12.90, totalComprado: 23.00, totalGasto: 200 });
 
 const projects = ref([]);
 const transactions = ref([]);
@@ -89,10 +76,10 @@ const documents = ref([]);
 const chartData = ref([]);
 
 const headers = [
-  { text: 'Título', value: 'title' },
-  { text: 'Status', value: 'status' },
-  { text: 'Orçamento (R$)', value: 'budget' },
-  { text: 'Ações', value: 'actions', sortable: false },
+  { title: 'Título', value: 'title' },
+  { title: 'Status', value: 'status' },
+  { title: 'Orçamento (R$)', value: 'budget' },
+  { title: 'Ações', value: 'actions', sortable: false },
 ];
 
 const depositDialog = ref(false);
@@ -201,6 +188,22 @@ onMounted(async () => {
 
 .action-btn:hover {
   box-shadow: 0 4px 16px rgba(0, 229, 208, 0.18);
+}
+
+.dashboard-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-row {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
 }
 
 @media (min-width: 960px) {
