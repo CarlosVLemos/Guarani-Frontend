@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { register } from '@/api/auth';
+import NavBar from '@/components/layout/NavBar.vue';
+import Footer from '@/components/layout/Footer.vue';
 
 // O router passa 'userType' como uma prop.
 const props = defineProps({
@@ -46,39 +48,19 @@ const handleRegister = async () => {
     return;
   }
 
-  let payload;
+  // Simplificamos o payload para alinhar com o schema UserRegistration do backend
+  // que requer apenas: email, password, user_type
   const userTypeUpper = props.userType.toUpperCase();
-
-  if (props.userType === 'ofertante') {
-    payload = {
-      email: formData.value.email,
-      password: formData.value.password,
-      user_type: userTypeUpper,
-      ofertante_profile: {
-        contact_name: formData.value.contact_name,
-        organization_name: formData.value.organization_name,
-        cnpj: formData.value.cnpj,
-        contact_position: formData.value.contact_position,
-        phone: formData.value.phone,
-        organization_type: formData.value.organization_type,
-      }
-    };
-  } else { // comprador
-    payload = {
-      email: formData.value.email,
-      password: formData.value.password,
-      user_type: userTypeUpper,
-      comprador_profile: {
-        contact_name: formData.value.contact_name,
-        project_interests: formData.value.projectInterests,
-      }
-    };
-  }
+  const payload = {
+    email: formData.value.email,
+    password: formData.value.password,
+    user_type: userTypeUpper,
+  };
 
   console.log(`Tentando registrar novo ${props.userType} com:`, payload);
 
   try {
-    const response = await register(payload); // A API de registro agora não precisa do userType
+  const response = await register(payload);
     console.log('✅ Registro bem-sucedido! Resposta da API:', response.data);
 
     // Após o sucesso, redirecionar para o login
@@ -112,141 +94,89 @@ const goToLogin = () => {
 </script>
 
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="6" lg="4">
-        <v-card class="elevation-12 pa-4">
-          <v-card-title class="text-center text-h5 font-weight-bold mb-4">
-            {{ formTitle }}
-          </v-card-title>
-          <v-card-subtitle class="text-center mb-6">
-            Crie sua conta para acessar a plataforma.
-          </v-card-subtitle>
+  <div>
+    <NavBar />
+    <v-container class="fill-height page-wrap" fluid>
+      <v-row align="center" justify="center">
+        <v-col cols="12" sm="8" md="6" lg="4">
+          <v-card class="elevation-12 pa-4">
+            <v-card-title class="text-center text-h5 font-weight-bold mb-4">
+              {{ formTitle }}
+            </v-card-title>
+            <v-card-subtitle class="text-center mb-6">
+              Crie sua conta para acessar a plataforma.
+            </v-card-subtitle>
 
-          <v-card-text>
-            <v-form @submit.prevent="handleRegister">
-              <!-- Campos Comuns -->
-              <v-text-field
-                v-model="formData.contact_name"
-                label="Nome do Contato"
-                prepend-inner-icon="mdi-account"
-                variant="outlined"
-                required
-              ></v-text-field>
-
-              <v-text-field
-                v-model="formData.email"
-                label="E-mail"
-                type="email"
-                prepend-inner-icon="mdi-email"
-                variant="outlined"
-                required
-              ></v-text-field>
-
-              <v-text-field
-                v-model="formData.password"
-                label="Senha"
-                type="password"
-                prepend-inner-icon="mdi-lock"
-                variant="outlined"
-                required
-              ></v-text-field>
-
-              <v-text-field
-                v-model="formData.confirmPassword"
-                label="Confirmar Senha"
-                type="password"
-                prepend-inner-icon="mdi-lock-check"
-                variant="outlined"
-                required
-              ></v-text-field>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- Campos Condicionais para Ofertante -->
-              <template v-if="userType === 'ofertante'">
+            <v-card-text>
+              <v-form @submit.prevent="handleRegister">
                 <v-text-field
-                  v-model="formData.organization_name"
-                  label="Nome da Organização/Empresa"
-                  prepend-inner-icon="mdi-domain"
-                  variant="outlined"
-                ></v-text-field>
-                <v-text-field
-                  v-model="formData.cnpj"
-                  label="CNPJ"
-                  prepend-inner-icon="mdi-card-account-details"
-                  variant="outlined"
-                ></v-text-field>
-                <v-text-field
-                  v-model="formData.contact_position"
-                  label="Cargo do Contato"
-                  prepend-inner-icon="mdi-briefcase"
+                  v-model="formData.email"
+                  label="E-mail"
+                  type="email"
+                  prepend-inner-icon="mdi-email"
                   variant="outlined"
                   required
-                ></v-text-field>
+                />
+
                 <v-text-field
-                  v-model="formData.phone"
-                  label="Telefone"
-                  prepend-inner-icon="mdi-phone"
+                  v-model="formData.password"
+                  label="Senha"
+                  type="password"
+                  prepend-inner-icon="mdi-lock"
                   variant="outlined"
                   required
-                ></v-text-field>
+                />
+
                 <v-text-field
-                  v-model="formData.organization_type"
-                  label="Tipo de Organização"
-                  prepend-inner-icon="mdi-office-building"
+                  v-model="formData.confirmPassword"
+                  label="Confirmar Senha"
+                  type="password"
+                  prepend-inner-icon="mdi-lock-check"
                   variant="outlined"
                   required
-                ></v-text-field>
-              </template>
+                />
 
-              <!-- Campos Condicionais para Comprador -->
-              <template v-if="userType === 'comprador'">
-                <v-textarea
-                  v-model="formData.projectInterests"
-                  label="Áreas de Interesse em Projetos de Carbono"
-                  prepend-inner-icon="mdi-leaf"
+                <v-select
+                  :items="['comprador', 'ofertante']"
+                  :model-value="props.userType"
+                  label="Tipo de usuário"
+                  prepend-inner-icon="mdi-account"
                   variant="outlined"
-                  rows="3"
-                ></v-textarea>
-              </template>
+                  disabled
+                />
 
-              <!-- Exibição de Erro -->
-              <v-alert v-if="error" type="error" density="compact" class="mt-4 mb-2">
-                {{ error }}
-              </v-alert>
+                <v-alert v-if="error" type="error" density="compact" class="mt-4 mb-2">
+                  {{ error }}
+                </v-alert>
 
-              <v-btn
-                type="submit"
-                color="primary"
-                block
-                large
-                class="mt-6"
-                :disabled="loading"
-              >
-                <v-progress-circular v-if="loading" indeterminate size="24" class="mr-2" />
-                Registrar
+                <v-btn
+                  type="submit"
+                  color="primary"
+                  block
+                  class="mt-6"
+                  :loading="loading"
+                >
+                  Registrar
+                </v-btn>
+              </v-form>
+            </v-card-text>
+
+            <v-card-actions class="justify-center mt-4">
+              <span class="text-body-2">Já tem uma conta?</span>
+              <v-btn variant="text" color="primary" @click="goToLogin">
+                Faça Login
               </v-btn>
-            </v-form>
-          </v-card-text>
-
-          <v-card-actions class="justify-center mt-4">
-            <span class="text-body-2">Já tem uma conta?</span>
-            <v-btn text color="primary" @click="goToLogin">
-              Faça Login
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+    <Footer />
+  </div>
 </template>
 
 <style scoped>
-.fill-height {
-  min-height: 100vh;
-  background-color: var(--v-theme-surface);
-}
+.page-wrap { min-height: calc(100vh - 64px - 240px); }
 .v-card {
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--v-theme-primary) 20%, transparent);

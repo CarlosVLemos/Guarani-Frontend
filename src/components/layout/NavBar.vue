@@ -87,7 +87,7 @@ onUnmounted(() => {
       
       <!-- Botões de Ação Desktop -->
       <div class="d-none d-md-flex align-center">
-        <template v-if="!authStore.user">
+  <template v-if="!authStore.isAuthenticated">
 
           <!-- Opções de Login com v-menu -->
           <v-menu location="bottom">
@@ -136,7 +136,7 @@ onUnmounted(() => {
 
         </template>
 
-        <template v-if="authStore.user">
+  <template v-if="authStore.isAuthenticated">
           <v-btn class="btn btn--primary mr-3" rounded elevation="2" to="/projects">Meus Projetos</v-btn>
           <v-btn class="btn btn--primary-variant mr-3" rounded elevation="2" to="/create-project">Criar Projeto</v-btn>
           <v-btn variant="outlined" class="btn btn--secondary ml-3" @click="handleLogout">Sair</v-btn>

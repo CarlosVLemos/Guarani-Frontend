@@ -81,13 +81,11 @@ const handleLogout = () => {
       
       <!-- Botões de Ação (Usuário Deslogado) -->
       <!-- Seção do Usuário Logado -->
-      <div v-if="authStore.user" class="px-4">
-        <v-list-item class="user-info-item">
+      <div v-if="authStore.isAuthenticated" class="px-4">
+        <v-list-item class="user-info-item" v-if="authStore.user">
             <template v-slot:prepend>
               <v-avatar color="grey-darken-1" class="mr-4">
-                <!-- Se o usuário tiver foto, mostra a imagem -->
                 <v-img v-if="authStore.user.profile_picture" :src="authStore.user.profile_picture" :alt="authStore.user.full_name"></v-img>
-                <!-- Senão, mostra um ícone padrão cinza -->
                 <svg-icon v-else type="mdi" :path="mdiAccountCircle" size="32" />
               </v-avatar>
             </template>
@@ -97,7 +95,7 @@ const handleLogout = () => {
         <v-divider class="my-4" />
       </div>
 
-      <div v-if="!authStore.user">
+  <div v-if="!authStore.isAuthenticated">
         <v-list-item class="px-4">
           <v-btn 
             variant="outlined"
@@ -135,7 +133,7 @@ const handleLogout = () => {
       </div>
 
       <!-- Botões de Ação (Usuário Logado) -->
-      <div v-if="authStore.user" class="px-4">
+  <div v-if="authStore.isAuthenticated" class="px-4">
         <!-- Você pode adicionar outros botões para usuários logados aqui, como "Meus Projetos" -->
         <!-- <v-btn block class="btn btn--primary mb-3" @click="handleNavigateTo('/projects')">Meus Projetos</v-btn> -->
         
