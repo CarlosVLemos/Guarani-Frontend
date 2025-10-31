@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { login as apiLogin } from '../api/auth';
+import { getMe } from '../api/users';
 
 export const useAuthStore = defineStore('auth', () => {
 
@@ -18,6 +19,16 @@ export const useAuthStore = defineStore('auth', () => {
       if (accessToken) {
         token.value = accessToken;
         localStorage.setItem('authToken', accessToken);
+        // fetch current user info
+        try {
+          const me = await getMe();
+          user.value = me.data;
+          localStorage.setItem('authUser', JSON.stringify(user.value));
+        } catch (e) {
+          console.error('Falha ao carregar dados do usuário atual:', e);
+          user.value = { email: credentials.email };
+          localStorage.setItem('authUser', JSON.stringify(user.value));
+        }
         return true;
       }
     } catch (error) {

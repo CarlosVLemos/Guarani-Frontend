@@ -2,6 +2,11 @@ import apiClient from './index';
 
 // Usuários API
 
+// (custom) current user info
+export const getMe = () => {
+  return apiClient.get('/users/me/');
+};
+
 // (operationId: users_list)
 export const getUsers = (params) => {
   return apiClient.get('/users/', { params });
