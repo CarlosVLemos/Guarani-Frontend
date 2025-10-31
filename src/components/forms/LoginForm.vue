@@ -37,11 +37,13 @@ const handleLogin = async () => {
   error.value = null;
   try {
     const credentials = { email: formData.value.email, password: formData.value.password };
+
     const ok = await authStore.login(credentials);
     if (ok) {
       const redirect = route.query.redirect || '/';
       router.push(redirect);
     }
+
   } catch (err) {
     console.error('❌ Erro no login:', err.response?.data || err.message);
     error.value = 'E-mail ou senha inválidos. Tente novamente.';
