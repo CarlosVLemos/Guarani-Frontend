@@ -27,7 +27,7 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
-    // meta: { requiresAuth: true } // Rota protegida
+    meta: { requiresAuth: true } // Rota protegida
   }
 ];
 
@@ -36,14 +36,16 @@ const router = createRouter({
   routes,
 });
 
-// // Guard genérico para rotas protegidas
-// router.beforeEach((to, from, next) => {
-//   const authStore = useAuthStore();
-//   if (to.meta.requiresAuth && !authStore.user) {
-//     next({ name: 'Login', params: { userType: 'comprador' } });
-//   } else {
-//     next();
-//   }
-// });
+// Guard genérico para rotas protegidas
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+
+    next({ name: 'Home' });
+    
+  } else {
+    next();
+  }
+});
 
 export default router;
