@@ -8,6 +8,7 @@ import { getUserById } from '@/api/users';
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('authToken') || null);
   const user = ref(JSON.parse(localStorage.getItem('authUser')) || null);
+  const isAuthResolved = ref(false);
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
@@ -41,15 +42,9 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = accessToken;
         localStorage.setItem('authToken', accessToken);
         // fetch current user info
-        try {
-          const me = await getMe();
-          user.value = me.data;
-          localStorage.setItem('authUser', JSON.stringify(user.value));
-        } catch (e) {
-          console.error('Falha ao carregar dados do usuário atual:', e);
-          user.value = { email: credentials.email };
-          localStorage.setItem('authUser', JSON.stringify(user.value));
-        }
+        const me = await getMe();
+        user.value = me.data;
+        localStorage.setItem('authUser', JSON.stringify(user.value));
         return true;
       }
     } catch (error) {
@@ -67,9 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Tenta buscar o usuário se um token existir no carregamento da página
-  if (token.value) {
-    fetchUser();
-  }
+  const initialAuthPromise = token.value ? fetchUser() : Promise.resolve();
 
   return {
     token,
@@ -78,5 +71,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     fetchUser,
+    initialAuthPromise, // Exporta a promessa diretamente
   };
 });

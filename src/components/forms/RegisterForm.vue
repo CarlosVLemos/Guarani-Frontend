@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, reactive, watchEffect, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { register } from '@/api/auth';
 import NavBar from '@/components/layout/NavBar.vue';
@@ -13,28 +13,60 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['change-type']);
-
 const router = useRouter();
 
 const loading = ref(false);
 const error = ref(null);
 
-const formData = ref({
+const formData = reactive({
   email: '',
   password: '',
   confirmPassword: '',
-  // Campos Ofertante obrigatórios
-  contact_name: '',
-  contact_position: '',
-  phone: '',
-  organization_type: '',
-  organization_name: '',
-  // Campos Ofertante opcionais
-  cnpj: '',
-  website: '',
-  description: '',
+  user_type: '',
+  ofertante_profile: {},
+  comprador_profile: {},
+  comprador_organization: {},
 });
+
+// Reage às mudanças na prop e reinicializa o formulário
+watchEffect(() => {
+  const type = props.userType || 'ofertante'; // Garante um valor padrão
+  formData.user_type = type.toUpperCase();
+
+  if (type === 'ofertante') {
+    formData.ofertante_profile = {
+      contact_name: '',
+      contact_position: '',
+      phone: '',
+      organization_type: null,
+      organization_name: '',
+      cnpj: '',
+      website: '',
+      description: '',
+    };
+    formData.comprador_profile = {};
+    formData.comprador_organization = {};
+  } else {
+    formData.comprador_profile = {
+      contact_name: '',
+      contact_position: '',
+      department: '',
+      phone: '',
+      internal_code: '',
+    };
+    formData.comprador_organization = {
+      company_name: '',
+      cnpj: '',
+      industry_sector: null,
+      website: '',
+    };
+    formData.ofertante_profile = {};
+  }
+});
+
+const formTitle = computed(() => 
+  props.userType === 'comprador' ? 'Registro de Comprador' : 'Registro de Ofertante'
+);
 
 const orgTypeItems = [
   { title: 'ONG', value: 'ONG' },
@@ -42,81 +74,58 @@ const orgTypeItems = [
   { title: 'Cooperativa', value: 'COOPERATIVA' },
   { title: 'Projeto Independente', value: 'PROJETO_INDEPENDENTE' },
 ];
-
-const formTitle = computed(() => 
-  props.userType === 'comprador' ? 'Registro de Comprador' : 'Registro de Ofertante'
-);
+const industrySectorItems = [
+  { title: 'Mineração', value: 'MINERACAO' },
+  { title: 'Petróleo', value: 'PETROLEO' },
+  { title: 'Siderurgia', value: 'SIDERURGIA' },
+  { title: 'Bancário', value: 'BANCARIO' },
+  { title: 'Manufatura', value: 'MANUFATURA' },
+  { title: 'Outros', value: 'OUTROS' },
+];
 
 const handleRegister = async () => {
   loading.value = true;
   error.value = null;
 
-  if (formData.value.password !== formData.value.confirmPassword) {
+  if (formData.password !== formData.confirmPassword) {
     error.value = 'As senhas não coincidem.';
     loading.value = false;
     return;
   }
 
-  const userTypeUpper = props.userType.toUpperCase();
+  let payload = {
+    email: formData.email,
+    password: formData.password,
+    user_type: formData.user_type,
+  };
 
-  // Validações específicas para ofertante
   if (props.userType === 'ofertante') {
-    const missing = [];
-    if (!formData.value.contact_name) missing.push('Nome do Contato');
-    if (!formData.value.contact_position) missing.push('Cargo');
-    if (!formData.value.phone) missing.push('Telefone');
-    if (!formData.value.organization_type) missing.push('Tipo de Organização');
-    if (!formData.value.organization_name) missing.push('Nome da Organização');
-    if (missing.length) {
-      error.value = `Preencha os campos obrigatórios: ${missing.join(', ')}.`;
-      loading.value = false;
-      return;
-    }
+    payload.ofertante_profile = formData.ofertante_profile;
+  } else {
+    payload.comprador_profile = formData.comprador_profile;
+    payload.comprador_organization = formData.comprador_organization;
   }
 
-  // Monta o payload conforme regras
-  const payload = props.userType === 'ofertante'
-    ? {
-        email: formData.value.email,
-        password: formData.value.password,
-        user_type: userTypeUpper,
-        ofertante_profile: {
-          contact_name: formData.value.contact_name,
-          contact_position: formData.value.contact_position,
-          phone: formData.value.phone,
-          organization_type: formData.value.organization_type,
-          organization_name: formData.value.organization_name,
-          // opcionais, só envia se preenchidos
-          ...(formData.value.cnpj ? { cnpj: formData.value.cnpj } : {}),
-          ...(formData.value.website ? { website: formData.value.website } : {}),
-          ...(formData.value.description ? { description: formData.value.description } : {}),
-        },
-      }
-    : {
-        email: formData.value.email,
-        password: formData.value.password,
-        user_type: userTypeUpper,
-      };
-
-  console.log(`Tentando registrar novo ${props.userType} com:`, payload);
-
   try {
-  const response = await register(payload);
-    console.log('✅ Registro bem-sucedido! Resposta da API:', response.data);
+    await register(payload);
     router.push({ name: 'Login', query: { registered: 'true' } });
   } catch (err) {
-    console.error('❌ Erro no registro:', err.response?.data || err.message);
+    const responseData = err.response?.data;
     const findFirstError = (errors) => {
-      if (!errors || typeof errors !== 'object') return null;
+      if (!errors || typeof errors !== 'object') return 'Ocorreu um erro desconhecido.';
       const keys = Object.keys(errors);
-      if (!keys.length) return null;
+      if (!keys.length) return 'Ocorreu um erro desconhecido.';
       const firstKey = keys[0];
       const firstValue = errors[firstKey];
-      if (Array.isArray(firstValue) && typeof firstValue[0] === 'string') return firstValue[0];
-      return findFirstError(firstValue);
+      if (Array.isArray(firstValue) && typeof firstValue[0] === 'string') {
+        return `${firstKey}: ${firstValue[0]}`;
+      }
+      if (typeof firstValue === 'object') {
+        return findFirstError(firstValue);
+      }
+      return 'Verifique os dados e tente novamente.';
     };
-    const responseData = err.response?.data;
-    error.value = findFirstError(responseData) || 'Ocorreu um erro ao registrar. Verifique os dados e tente novamente.';
+    error.value = findFirstError(responseData);
   } finally {
     loading.value = false;
   }
@@ -143,6 +152,7 @@ const goToLogin = () => {
 
             <v-card-text>
               <v-form @submit.prevent="handleRegister">
+                <h3 class="text-subtitle-1 font-weight-medium mb-3">Dados de Acesso</h3>
                 <v-text-field
                   v-model="formData.email"
                   label="E-mail"
@@ -151,7 +161,6 @@ const goToLogin = () => {
                   variant="outlined"
                   required
                 />
-
                 <v-text-field
                   v-model="formData.password"
                   label="Senha"
@@ -160,7 +169,6 @@ const goToLogin = () => {
                   variant="outlined"
                   required
                 />
-
                 <v-text-field
                   v-model="formData.confirmPassword"
                   label="Confirmar Senha"
@@ -170,74 +178,128 @@ const goToLogin = () => {
                   required
                 />
 
-                <v-select
-                  :items="['comprador', 'ofertante']"
-                  :model-value="props.userType"
-                  label="Tipo de usuário"
-                  prepend-inner-icon="mdi-account"
-                  variant="outlined"
-                  disabled
-                />
-
                 <!-- Campos para Ofertante -->
                 <template v-if="props.userType === 'ofertante'">
                   <v-divider class="my-4" />
+                  <h3 class="text-subtitle-1 font-weight-medium mb-3">Perfil do Ofertante</h3>
                   <v-text-field
-                    v-model="formData.contact_name"
+                    v-model="formData.ofertante_profile.contact_name"
                     label="Nome do Contato"
                     prepend-inner-icon="mdi-account"
                     variant="outlined"
                     required
                   />
                   <v-text-field
-                    v-model="formData.contact_position"
+                    v-model="formData.ofertante_profile.contact_position"
                     label="Cargo do Contato"
                     prepend-inner-icon="mdi-briefcase"
                     variant="outlined"
                     required
                   />
                   <v-text-field
-                    v-model="formData.phone"
+                    v-model="formData.ofertante_profile.phone"
                     label="Telefone"
                     prepend-inner-icon="mdi-phone"
                     variant="outlined"
                     required
                   />
                   <v-select
+                    v-model="formData.ofertante_profile.organization_type"
                     :items="orgTypeItems"
-                    item-title="title"
-                    item-value="value"
-                    v-model="formData.organization_type"
                     label="Tipo de Organização"
                     prepend-inner-icon="mdi-office-building"
                     variant="outlined"
                     required
                   />
                   <v-text-field
-                    v-model="formData.organization_name"
-                    label="Nome da Organização/Empresa"
+                    v-model="formData.ofertante_profile.organization_name"
+                    label="Nome da Organização/Projeto"
                     prepend-inner-icon="mdi-domain"
                     variant="outlined"
                     required
                   />
                   <v-text-field
-                    v-model="formData.cnpj"
+                    v-model="formData.ofertante_profile.cnpj"
                     label="CNPJ (opcional)"
                     prepend-inner-icon="mdi-card-account-details"
                     variant="outlined"
                   />
                   <v-text-field
-                    v-model="formData.website"
+                    v-model="formData.ofertante_profile.website"
                     label="Website (opcional)"
                     prepend-inner-icon="mdi-web"
                     variant="outlined"
                   />
                   <v-textarea
-                    v-model="formData.description"
-                    label="Descrição (opcional)"
+                    v-model="formData.ofertante_profile.description"
+                    label="Descrição da Organização (opcional)"
                     prepend-inner-icon="mdi-text"
                     variant="outlined"
                     rows="3"
+                  />
+                </template>
+
+                <!-- Campos para Comprador -->
+                <template v-if="props.userType === 'comprador'">
+                  <v-divider class="my-4" />
+                  <h3 class="text-subtitle-1 font-weight-medium mb-3">Perfil do Comprador</h3>
+                  <v-text-field
+                    v-model="formData.comprador_profile.contact_name"
+                    label="Nome do Contato na Empresa"
+                    prepend-inner-icon="mdi-account"
+                    variant="outlined"
+                    required
+                  />
+                  <v-text-field
+                    v-model="formData.comprador_profile.contact_position"
+                    label="Cargo do Contato"
+                    prepend-inner-icon="mdi-briefcase"
+                    variant="outlined"
+                  />
+                   <v-text-field
+                    v-model="formData.comprador_profile.department"
+                    label="Departamento"
+                    prepend-inner-icon="mdi-door-open"
+                    variant="outlined"
+                  />
+                  <v-text-field
+                    v-model="formData.comprador_profile.phone"
+                    label="Telefone do Contato"
+                    prepend-inner-icon="mdi-phone"
+                    variant="outlined"
+                    required
+                  />
+
+                  <v-divider class="my-4" />
+                  <h3 class="text-subtitle-1 font-weight-medium mb-3">Dados da Empresa</h3>
+                  <v-text-field
+                    v-model="formData.comprador_organization.company_name"
+                    label="Nome da Empresa"
+                    prepend-inner-icon="mdi-domain"
+                    variant="outlined"
+                    required
+                  />
+                  <v-text-field
+                    v-model="formData.comprador_organization.cnpj"
+                    label="CNPJ da Empresa"
+                    prepend-inner-icon="mdi-card-account-details"
+                    variant="outlined"
+                    required
+                  />
+                  <v-select
+                    v-model="formData.comprador_organization.industry_sector"
+                    :items="industrySectorItems"
+                    label="Setor da Indústria"
+                    prepend-inner-icon="mdi-factory"
+                    variant="outlined"
+                    required
+                  />
+                  <v-text-field
+                    v-model="formData.comprador_organization.website"
+                    label="Website da Empresa"
+                    prepend-inner-icon="mdi-web"
+                    variant="outlined"
+                    required
                   />
                 </template>
 
@@ -252,7 +314,7 @@ const goToLogin = () => {
                   class="mt-6"
                   :loading="loading"
                 >
-                  Registrar
+                  Criar Conta
                 </v-btn>
               </v-form>
             </v-card-text>

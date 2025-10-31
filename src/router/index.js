@@ -27,21 +27,6 @@ const routes = [
     component: () => import('../views/Logout.vue'),
   },
   {
-    path: '/projects',
-    name: 'Projects',
-    component: () => import('../views/Projects.vue'),
-  },
-  {
-    path: '/me',
-    name: 'Me',
-    component: () => import('../views/Me.vue'),
-  },
-  {
-    path: '/logout',
-    name: 'Logout',
-    component: () => import('../views/Logout.vue'),
-  },
-  {
     path: '/login/:userType?',
     name: 'Login',
     component: Login,
@@ -67,12 +52,14 @@ const router = createRouter({
 });
 
 // Guard genérico para rotas protegidas
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
 
+  // Espera a promessa de autenticação inicial ser resolvida
+  await authStore.initialAuthPromise;
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'Home' });
-    
   } else {
     next();
   }

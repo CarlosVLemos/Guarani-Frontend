@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-wrapper">
-    <NavbarDashboard />
+    <navbarDashboard />
     <v-container fluid class="dashboard-container">
       <div class="d-flex align-center justify-space-between mb-6 dashboard-header">
         <div>
@@ -32,7 +32,7 @@
       </div>
       
       <!-- Projetos do ofertante ou projetos comprados pelo comprador -->
-      <ProjectsTable />
+      <ProjectsTable :projects="projects" :headers="headers" />
 
       <UserExtras :user="user" :requirements="requirements" :documents="documents" />
 
@@ -49,24 +49,20 @@ import Footer from '@/components/layout/Footer.vue';
 import WalletSummary from '@/components/layout/WalletSummary.vue';
 import ProjectsTable from '@/components/tables/ProjectsTable.vue';
 import DepositDialog from '@/components/dialogs/DepositDialog.vue';
-import NavbarDashboard from '@/components/layout/NavbarDashboard.vue';
+import navbarDashboard from '@/components/layout/navbarDashboard.vue';
 import UserProfile from '@/components/layout/UserProfile.vue';
 import WalletChart from '@/components/layout/WalletChart.vue';
 import TransactionHistory from '@/components/layout/TransactionHistory.vue';
 import UserExtras from '../components/layout/UserExtras.vue';
 import { useAuthStore } from '@/store/auth';
 
-// APIs
-import { getProjects } from '@/api/projects';
-import { getCompradorProfiles, getCompradorRequirements, getCompradorDocuments } from '@/api/comprador';
-import { getOfertanteProfiles, getOfertanteDocuments } from '@/api/ofertante';
-import { getTransactions } from '@/api/marketplace';
+import { getMe } from '@/api/users';
 
 const authStore = useAuthStore();
 const router = useRouter();
 
 const user = computed(() => authStore.user || { name: 'Usuário', email: 'user@email.com', role: 'ofertante', user_type: 'ofertante' });
-const wallet = computed(() => authStore.wallet || { saldo: 12.90, totalComprado: 23.00, totalGasto: 200 });
+const wallet = computed(() => authStore.wallet);
 
 const projects = ref([]);
 const transactions = ref([]);

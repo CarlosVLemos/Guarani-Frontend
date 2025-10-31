@@ -29,26 +29,10 @@
 </template>
 <script setup>
 
-const mockProjects = [
-  { id: 1, title: 'Projeto Amazônia', status: 'Ativo', budget: 50000 },
-  { id: 2, title: 'Projeto Cerrado', status: 'Finalizado', budget: 30000 },
-  { id: 3, title: 'Projeto Pantanal', status: 'Em análise', budget: 20000 },
-];
-
-const mockHeaders = [
-  { title: 'Título', value: 'title' },
-  { title: 'Status', value: 'status' },
-  { title: 'Orçamento (R$)', value: 'budget' },
-  { title: 'Ações', value: 'actions', sortable: false },
-];
-
 const props = defineProps({
   projects: Array,
   headers: Array,
 });
-
-const projects = props.projects && props.projects.length ? props.projects : mockProjects;
-const headers = props.headers && props.headers.length ? props.headers : mockHeaders;
 
 </script>
 <style scoped>
