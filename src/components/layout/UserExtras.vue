@@ -7,16 +7,20 @@
         <p>Orçamento: R$ {{ requirements.orcamento }}</p>
         <p>Preferências: {{ requirements.preferencias }}</p>
       </div>
+      <div v-else class="text-caption info-text">Nenhuma meta ou preferência cadastrada.</div>
+
       <h3 class="mt-8 mb-2">Documentos de Sustentabilidade</h3>
-      <ul>
+      <ul v-if="documents && documents.length">
         <li v-for="doc in documents" :key="doc.id">{{ doc.tipo }} - {{ doc.nome }}</li>
       </ul>
+      <div v-else class="text-caption info-text">Nenhum documento encontrado.</div>
     </div>
     <div v-else>
       <h3 class="mt-8 mb-2">Documentos do Ofertante</h3>
-      <ul>
+      <ul v-if="documents && documents.length">
         <li v-for="doc in documents" :key="doc.id">{{ doc.tipo }} - {{ doc.nome }}</li>
       </ul>
+      <div v-else class="text-caption info-text">Nenhum documento encontrado.</div>
     </div>
   </div>
 </template>
@@ -28,3 +32,10 @@ defineProps({
   documents: Array
 });
 </script>
+
+<style scoped>
+.info-text {
+  color: #00CFC7;
+  margin-bottom: 12px;
+}
+</style>

@@ -12,19 +12,25 @@ import { computed } from 'vue'
 import { mdiResponsive } from '@mdi/js'
 Chart.register(...registerables)
 
-const mockData = [
-  { date: '2025-10-26', value: 1200 },
-  { date: '2025-10-27', value: 1500 },
-  { date: '2025-10-28', value: 1300 },
-  { date: '2025-10-29', value: 1600 },
-]
 
 const props = defineProps({ data: Array })
 
-const chartSource = props.data && props.data.length ? props.data : mockData;
+const chartSource = props.data ;
+
+function formatDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 
 const chartData = computed(() => ({
-  labels: chartSource.map(d => d.date),
+  labels: chartSource.map(d => formatDate(d.date)),
   datasets: [{
     label: 'Saldo (R$)',
     data: chartSource.map(d => d.value),

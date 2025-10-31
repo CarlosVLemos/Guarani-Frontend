@@ -24,7 +24,7 @@
 defineProps({ wallet: Object });
 const formatted = (value) => {
   const v = Number(value) || 0;
-  return v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace('.', ',');
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 </script>
 <style scoped>

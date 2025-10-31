@@ -5,7 +5,11 @@
       <div class="text-caption">Total: {{ projects.length }}</div>
     </div>
     <div class="table-wrapper">
+      <div v-if="!projects || projects.length === 0" class="text-caption pa-4 info-text">
+        Nenhum projeto encontrado.
+      </div>
       <v-data-table
+        v-else
         :items="projects"
         :headers="headers"
         dense
@@ -20,9 +24,6 @@
             <v-icon >mdi-pencil</v-icon>
           </v-btn>
         </template>
-        <template #no-data>
-          <div class="text-caption pa-4 info-text">Nenhum projeto encontrado.</div>
-        </template>
       </v-data-table>
     </div>
   </v-card>
@@ -33,6 +34,9 @@ const props = defineProps({
   projects: Array,
   headers: Array,
 });
+
+const projects = props.projects;
+const headers = props.headers;
 
 </script>
 <style scoped>

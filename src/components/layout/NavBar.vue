@@ -151,9 +151,18 @@ onUnmounted(() => {
               <v-list-item @click="handleLogout">
                 <v-list-item-title>Sair</v-list-item-title>
               </v-list-item>
-            </template>
-          </v-list>
-        </v-menu>
+            </v-list>
+          </v-menu>
+
+        </template>
+
+        <template v-if="authStore.user">
+          <v-btn class="btn btn--primary mr-3" rounded elevation="2" to="/projects">Meus Projetos</v-btn>
+          <v-btn class="btn btn--primary-variant mr-3 text-white" rounded elevation="2" to="/create-project">Criar Projeto</v-btn>
+          <v-btn variant="outlined" class="btn btn--secondary ml-3" @click="handleLogout">Sair</v-btn>
+        </template>
+
+        <ThemeToggleButton class="ml-4" />
       </div>
 
       <!-- Ícone do Menu Mobile -->

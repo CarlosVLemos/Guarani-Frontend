@@ -36,7 +36,6 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await apiLogin(credentials);
       console.log("Resposta do login:", response);
       const accessToken = response.data.access;
-      const refreshToken = response.data.refresh;
 
       if (accessToken) {
         token.value = accessToken;
