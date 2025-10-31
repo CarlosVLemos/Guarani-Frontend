@@ -1,22 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { login } from '@/api/auth';
 import { useAuthStore } from '@/store/auth';
-
-// O router passa 'userType' como uma prop.
-const props = defineProps({
-  userType: {
-    type: String,
-    required: true,
-    validator: (value) => ['comprador', 'ofertante'].includes(value),
-  },
-});
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Reatividade para os campos do formulário
 const formData = ref({
   email: '',
   password: '',
@@ -26,24 +15,16 @@ const formData = ref({
 const loading = ref(false);
 const error = ref(null);
 
-const formTitle = computed(() => 
-  props.userType === 'comprador' ? 'Login de Comprador' : 'Login de Ofertante'
-);
-
 const handleLogin = async () => {
   loading.value = true;
   error.value = null;
-  console.log(`Tentando login com:`, { email: formData.value.email });
-  const credentials = { email: formData.value.email, password: formData.value.password };
-  console.log(`Tentando login com:`, credentials);
+  
   try {
-    const credentials = { email: formData.value.email, password: formData.value.password };
-    const response = await login(credentials);
-
-    console.log('✅ Login bem-sucedido! Resposta da API:', response.data);
-    router.push('/'); // Redireciona para a home após o login
+    await authStore.login(formData.value);
+    console.log('✅ Login bem-sucedido! Navegando para a home.');
+    router.push('/');
   } catch (err) {
-    console.error('❌ Erro no login:', err.response?.data || err.message);
+    console.error('❌ Erro no login:', err);
     error.value = 'E-mail ou senha inválidos. Tente novamente.';
   } finally {
     loading.value = false;
@@ -51,17 +32,17 @@ const handleLogin = async () => {
 };
 
 const goToRegister = () => {
-  router.push(`/register/${props.userType}`);
+  router.push({ name: 'Register' });
 }
 </script>
 
 <template>
   <v-container class="fill-height" fluid>
     <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="6" lg="4">
+      <v-col cols="12" sm="10" md="8" lg="6">
         <v-card class="elevation-12 pa-4">
           <v-card-title class="text-center text-h5 font-weight-bold mb-4">
-            {{ formTitle }}
+            Login
           </v-card-title>
           <v-card-subtitle class="text-center mb-6">
             Bem-vindo(a) de volta!
@@ -93,7 +74,6 @@ const goToRegister = () => {
                 color="primary"
               ></v-checkbox>
 
-              <!-- Exibição de Erro -->
               <v-alert v-if="error" type="error" density="compact" class="mt-2 mb-4">
                 {{ error }}
               </v-alert>
@@ -104,8 +84,9 @@ const goToRegister = () => {
                 block
                 large
                 class="mt-4"
+                :loading="loading"
+                :disabled="loading"
               >
-                <v-progress-circular v-if="loading" indeterminate size="24" class="mr-2" />
                 Entrar
               </v-btn>
             </v-form>

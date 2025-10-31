@@ -20,8 +20,9 @@
       participantes
     </div>
     <div class="d-flex flex-column">
-      <p>Carlos Victor Lemos da Silva</p>
+      <p>Carlos Lemos</p>
       <p>Cauê Tamirana</p>
+      <p>Emanuelle Ferreira</p>
     </div>
     
     <div class="text-caption footer-text-secondary">

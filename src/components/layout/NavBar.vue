@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import logo from '@/assets/LOGO 2.png';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiLeaf, mdiChevronDown } from '@mdi/js';
 import { useAuthStore } from '@/store/auth';
@@ -32,7 +33,6 @@ const scrollTo = (elementId) => {
   const element = document.getElementById(elementId);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    console.log(`Scrolled to element with ID: ${elementId}`);
   }
   drawer.value = false;
 };
@@ -40,8 +40,6 @@ const scrollTo = (elementId) => {
 const navigateTo = (path) => {
   router.push(path);
   drawer.value = false;
-
-  console.log(`Navigated to path: ${path}`);
 };
 
 // Hooks do ciclo de vida
@@ -65,8 +63,8 @@ onUnmounted(() => {
     <v-container fluid class="d-flex align-center justify-space-between px-4">
       <!-- Logo -->
       <div class="d-flex align-center">
-        <div class="logo-background mr-3">
-          <svg-icon type="mdi" :path="mdiLeaf" class="leaf-icon" />
+        <div>
+          <v-img :src="logo" alt="Logo" contain height="80" width="80" class="mr-3" />
         </div>
         <v-toolbar-title class="brand-name">Guarani</v-toolbar-title>
       </div>
@@ -87,63 +85,66 @@ onUnmounted(() => {
       
       <!-- Botões de Ação Desktop -->
       <div class="d-none d-md-flex align-center">
-        <template v-if="!authStore.user">
+        <ThemeToggleButton />
 
-          <!-- Opções de Login com v-menu -->
-          <v-menu location="bottom">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                variant="outlined"
-                class="btn btn--secondary mr-3"
-                append-icon="mdi-chevron-down"
-              >
-                Login
-              </v-btn>
+        <v-menu location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn v-bind="props" icon class="ml-4">
+              <v-avatar color="surface-variant">
+                <template v-if="authStore.user && authStore.user.profile_picture">
+                  <v-img :src="authStore.user.profile_picture" alt="User Avatar"></v-img>
+                </template>
+                <template v-else-if="authStore.user">
+                  <span>{{ authStore.user.email.charAt(0).toUpperCase() }}</span>
+                </template>
+                <template v-else>
+                  <v-icon>mdi-account-circle-outline</v-icon>
+                </template>
+              </v-avatar>
+            </v-btn>
+          </template>
+
+          <v-list>
+            <!-- Menu para usuário deslogado -->
+            <template v-if="!authStore.user">
+              <v-list-item @click="navigateTo('/login')">
+                <v-list-item-title>Login</v-list-item-title>
+              </v-list-item>
+              <v-list-item>
+                 <v-menu location="end">
+                    <template v-slot:activator="{ props }">
+                      <v-list-item-title v-bind="props">Registrar</v-list-item-title>
+                    </template>
+                    <v-list>
+                      <v-list-item @click="navigateTo('/register/comprador')">
+                        <v-list-item-title>Como Comprador</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item @click="navigateTo('/register/ofertante')">
+                        <v-list-item-title>Como Ofertante</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                 </v-menu>
+              </v-list-item>
             </template>
-            <v-list>
-              <v-list-item @click="navigateTo('/login/comprador')">
-                <v-list-item-title>Login Comprador &gt;</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="navigateTo('/login/ofertante')">
-                <v-list-item-title>Login Ofertante &gt;</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
 
-          <!-- Opções de Registro com v-menu -->
-          <v-menu location="bottom">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                class="btn btn--primary"
-                rounded 
-                elevation="2"
-                append-icon="mdi-chevron-down"
-              >
-                Registrar
-              </v-btn>
+            <!-- Menu para usuário logado -->
+            <template v-if="authStore.user">
+              <v-list-item v-if="authStore.user.is_superuser" to="/admin">
+                <v-list-item-title>Admin</v-list-item-title>
+              </v-list-item>
+              <v-list-item to="/projects">
+                <v-list-item-title>Meus Projetos</v-list-item-title>
+              </v-list-item>
+              <v-list-item to="/create-project">
+                <v-list-item-title>Criar Projeto</v-list-item-title>
+              </v-list-item>
+              <v-divider></v-divider>
+              <v-list-item @click="handleLogout">
+                <v-list-item-title>Sair</v-list-item-title>
+              </v-list-item>
             </template>
-            <v-list>
-              <v-list-item @click="navigateTo('/register/comprador')">
-                <v-list-item-title>Registro Comprador &gt;</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="navigateTo('/register/ofertante')">
-                <v-list-item-title>Registro Ofertante &gt;</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-
-        </template>
-
-        <template v-if="authStore.user">
-          <v-btn v-if="authStore.user.is_superuser" class="btn btn--primary mr-3" rounded elevation="2" to="/admin">Admin</v-btn>
-          <v-btn class="btn btn--primary mr-3" rounded elevation="2" to="/projects">Meus Projetos</v-btn>
-          <v-btn class="btn btn--primary-variant mr-3" rounded elevation="2" to="/create-project">Criar Projeto</v-btn>
-          <v-btn variant="outlined" class="btn btn--secondary ml-3" @click="handleLogout">Sair</v-btn>
-        </template>
-
-        <ThemeToggleButton class="ml-4" />
+          </v-list>
+        </v-menu>
       </div>
 
       <!-- Ícone do Menu Mobile -->
@@ -264,7 +265,7 @@ onUnmounted(() => {
 
 :deep(.btn--primary) {
   background: linear-gradient(135deg, #00E5D0, #00CFC7) !important;
-  color: #fff !important;
+  color: #004d4a !important;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 229, 208, 0.3);
 }
