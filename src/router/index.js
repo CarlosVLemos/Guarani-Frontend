@@ -10,6 +10,21 @@ const routes = [
     component: Home,
   },
   {
+    path: '/projects',
+    name: 'Projects',
+    component: () => import('../views/Projects.vue'),
+  },
+  {
+    path: '/me',
+    name: 'Me',
+    component: () => import('../views/Me.vue'),
+  },
+  {
+    path: '/logout',
+    name: 'Logout',
+    component: () => import('../views/Logout.vue'),
+  },
+  {
     path: '/login/:userType',
     name: 'Login',
     // Lazy load o componente do formulário
