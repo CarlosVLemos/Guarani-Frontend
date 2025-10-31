@@ -38,10 +38,11 @@ const handleLogin = async () => {
   console.log(`Tentando login com:`, credentials);
   try {
     const credentials = { email: formData.value.email, password: formData.value.password };
-    const response = await login(credentials);
 
-    console.log('✅ Login bem-sucedido! Resposta da API:', response.data);
-    router.push('/'); // Redireciona para a home após o login
+    await authStore.login(credentials);
+
+    router.push('/dashboard'); // Redireciona para o dashboard após o login
+
   } catch (err) {
     console.error('❌ Erro no login:', err.response?.data || err.message);
     error.value = 'E-mail ou senha inválidos. Tente novamente.';
