@@ -3,33 +3,30 @@
     <div class="d-flex align-center justify-space-between">
       <div class="d-flex align-center">
         <v-avatar size="56" class="mr-4">
-          <img :src="user.avatar || 'https://i.pravatar.cc/56'" alt="avatar" />
+          <img :src="props.user?.avatar || 'https://i.pravatar.cc/56'" alt="avatar" />
         </v-avatar>
         <div>
-          <div class="profile-name">{{ user.name || user.email }}</div>
-          <div class="profile-email">{{ user.email }}</div>
-          <div class="profile-role">Tipo: {{ user.role }}</div>
+          <div class="profile-email">{{ props.user?.email || 'Sem e-mail' }}</div>
+          <div class="profile-approved">
+            Verificação:
+            <span v-if="props.user?.verification_status">
+              Verificado
+              <v-icon color="green" small>mdi-check</v-icon>
+            </span>
+            <span v-else>
+              Não aprovado
+              <v-icon color="red" small>mdi-close</v-icon>
+            </span>
+          </div>
+          <div class="profile-role">Tipo: {{ props.user?.user_type || 'N/A' }}</div>
         </div>
       </div>
-      <v-btn color="error" @click="handleLogout">
-        <v-icon left>mdi-logout</v-icon>
-        Sair
-      </v-btn>
     </div>
   </v-card>
 </template>
+
 <script setup>
-import { useAuthStore } from '@/store/auth'
-import { useRouter } from 'vue-router'
-
 const props = defineProps({ user: Object })
-const authStore = useAuthStore()
-const router = useRouter()
-
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/')
-}
 </script>
 
 <style scoped>
@@ -40,16 +37,19 @@ const handleLogout = () => {
   background: linear-gradient(135deg, #00E5D0 0%, #00CFC7 100%);
   color: #004d4a;
 }
-.profile-name {
+.profile-role {
   font-weight: 700;
   font-size: 1.2rem;
   color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .profile-email {
   font-size: 0.95rem;
   color: #ffffff;
 }
-.profile-role {
+.profile-approved {
   font-size: 0.9rem;
   color: #fff;
   font-weight: 500;

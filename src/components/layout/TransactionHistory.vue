@@ -2,7 +2,11 @@
   <v-card class="history-card pa-4 mb-6">
     <div class="text-subtitle-1 mb-2">Histórico de Transações</div>
     <div class="table-wrapper">
+      <div v-if="!transactions || transactions.length === 0" class="text-caption pa-4 info-text">
+        Nenhuma transação encontrada.
+      </div>
       <v-data-table
+        v-else
         :items="transactions"
         :headers="headers"
         dense
@@ -11,28 +15,19 @@
       >
         <template #item.amount="{ item }">
           <span :class="item.type === 'deposit' ? 'deposit' : 'withdraw'">
-            {{ item.type === 'deposit' ? '+' : '-' }} R$ {{ item.amount.toFixed(2) }}
+            {{ item.type === 'deposit' ? '+' : '-' }}
+            R$
+            {{ formatAmount(item.amount) }}
           </span>
-        </template>
-        <template #no-data>
-          <div class="text-caption pa-4 info-text">Nenhuma transação encontrada.</div>
         </template>
       </v-data-table>
     </div>
   </v-card>
 </template>
 <script setup>
-
-const mockTransactions = [
-  { id: 1, date: '2025-10-29', type: 'deposit', amount: 1500.00, description: 'Salário' },
-  { id: 2, date: '2025-10-28', type: 'withdraw', amount: 200.00, description: 'Supermercado' },
-  { id: 3, date: '2025-10-27', type: 'deposit', amount: 300.00, description: 'Freelance' },
-  { id: 4, date: '2025-10-26', type: 'withdraw', amount: 100.00, description: 'Cinema' },
-];
-
 const props = defineProps({ transactions: Array });
 
-const transactions = props.transactions && props.transactions.length ? props.transactions : mockTransactions;
+const transactions = props.transactions;
 
 const headers = [
   { title: 'Data', value: 'date' },
@@ -40,9 +35,13 @@ const headers = [
   { title: 'Valor', value: 'amount' },
   { title: 'Descrição', value: 'description' },
 ];
+
+function formatAmount(value) {
+  const v = Number(value) || 0;
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 </script>
 <style scoped>
-
 .history-card {
   border-radius: 18px;
   box-shadow: 0 2px 16px rgba(0, 229, 208, 0.12);

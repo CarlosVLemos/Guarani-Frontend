@@ -12,16 +12,10 @@ import { computed } from 'vue'
 import { mdiResponsive } from '@mdi/js'
 Chart.register(...registerables)
 
-const mockData = [
-  { date: '2025-10-26', value: 1200 },
-  { date: '2025-10-27', value: 1500 },
-  { date: '2025-10-28', value: 1300 },
-  { date: '2025-10-29', value: 1600 },
-]
 
 const props = defineProps({ data: Array })
 
-const chartSource = props.data && props.data.length ? props.data : mockData;
+const chartSource = props.data ;
 
 const chartData = computed(() => ({
   labels: chartSource.map(d => d.date),

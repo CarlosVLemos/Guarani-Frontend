@@ -40,7 +40,7 @@ const handleLogin = async () => {
 
     const ok = await authStore.login(credentials);
     if (ok) {
-      const redirect = route.query.redirect || '/';
+      const redirect = route.query.redirect || '/dashboard';
       router.push(redirect);
     }
 

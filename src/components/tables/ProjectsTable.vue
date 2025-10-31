@@ -5,7 +5,11 @@
       <div class="text-caption">Total: {{ projects.length }}</div>
     </div>
     <div class="table-wrapper">
+      <div v-if="!projects || projects.length === 0" class="text-caption pa-4 info-text">
+        Nenhum projeto encontrado.
+      </div>
       <v-data-table
+        v-else
         :items="projects"
         :headers="headers"
         dense
@@ -20,35 +24,18 @@
             <v-icon >mdi-pencil</v-icon>
           </v-btn>
         </template>
-        <template #no-data>
-          <div class="text-caption pa-4 info-text">Nenhum projeto encontrado.</div>
-        </template>
       </v-data-table>
     </div>
   </v-card>
 </template>
 <script setup>
-
-const mockProjects = [
-  { id: 1, title: 'Projeto Amazônia', status: 'Ativo', budget: 50000 },
-  { id: 2, title: 'Projeto Cerrado', status: 'Finalizado', budget: 30000 },
-  { id: 3, title: 'Projeto Pantanal', status: 'Em análise', budget: 20000 },
-];
-
-const mockHeaders = [
-  { title: 'Título', value: 'title' },
-  { title: 'Status', value: 'status' },
-  { title: 'Orçamento (R$)', value: 'budget' },
-  { title: 'Ações', value: 'actions', sortable: false },
-];
-
 const props = defineProps({
   projects: Array,
   headers: Array,
 });
 
-const projects = props.projects && props.projects.length ? props.projects : mockProjects;
-const headers = props.headers && props.headers.length ? props.headers : mockHeaders;
+const projects = props.projects;
+const headers = props.headers;
 
 </script>
 <style scoped>

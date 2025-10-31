@@ -2,39 +2,68 @@
   <div class="dashboard-wrapper">
     <NavbarDashboard />
     <v-container fluid class="dashboard-container">
-      <div class="d-flex align-center justify-space-between mb-6 dashboard-header">
-        <div>
-          <h2 class="text-h5 mb-1 dashboard-title">Dashboard</h2>
-          <div class="text-caption dashboard-subtitle">
-            Visão geral da sua conta
-            <span v-if="user.user_type === 'comprador'"> (Comprador)</span>
-            <span v-else> (Ofertante)</span>
+      <!-- 🔄 Loading State -->
+      <div v-if="loading" class="text-center py-16">
+        <v-progress-circular indeterminate color="primary" size="64" />
+        <p class="mt-4 text-caption">Carregando dados...</p>
+      </div>
+
+      <!-- ✅ Conteúdo quando carregado -->
+      <template v-else-if="user">
+        <div
+          class="d-flex align-center justify-space-between mb-6 dashboard-header"
+        >
+          <div>
+            <h2 class="text-h5 mb-1 dashboard-title">Dashboard</h2>
+            <div class="text-caption dashboard-subtitle">
+              Visão geral da sua conta
+              <span v-if="user.user_type === 'COMPRADOR'"> (Comprador)</span>
+              <span v-else> (Ofertante)</span>
+            </div>
+          </div>
+          <div class="actions-container">
+            <v-btn
+              v-if="user.user_type === 'OFERTANTE'"
+              class="action-btn"
+              color="primary"
+              elevation="2"
+              @click="goCreateProject"
+            >
+              <v-icon left>mdi-plus</v-icon> Criar Projeto
+            </v-btn>
+            <v-btn
+              class="action-btn"
+              variant="outlined"
+              color="secondary"
+              @click="openDeposit"
+            >
+              <v-icon left>mdi-cash-plus</v-icon> Depositar
+            </v-btn>
           </div>
         </div>
-        <div class="actions-container">
-          <v-btn v-if="user.user_type === 'ofertante'" class="action-btn" color="primary" elevation="2" @click="goCreateProject">
-            <v-icon left>mdi-plus</v-icon> Criar Projeto
-          </v-btn>
-          <v-btn class="action-btn" variant="outlined" color="secondary" @click="openDeposit">
-            <v-icon left>mdi-cash-plus</v-icon> Depositar
-          </v-btn>
+
+        <UserProfile :user="user" class="mb-6" />
+        <WalletSummary :wallet="wallet" />
+
+        <div class="dashboard-row">
+          <WalletChart :data="chartData" />
+          <TransactionHistory :transactions="transactions" />
         </div>
+
+        <ProjectsTable :projects="projects" :headers="projectHeaders" />
+
+        <UserExtras
+          :user="user"
+          :requirements="requirements"
+          :documents="documents"
+        />
+      </template>
+
+      <!-- ⚠️ Estado de erro -->
+      <div v-else class="text-center py-16">
+        <v-icon size="64" color="error">mdi-alert-circle</v-icon>
+        <p class="mt-4">Erro ao carregar dados do usuário</p>
       </div>
-      <UserProfile :user="user" class="mb-6" />
-      <WalletSummary :wallet="wallet" />
-
-      <div class="dashboard-row">
-        <!-- Gráfico de evolução do saldo -->
-        <WalletChart :data="chartData" />
-
-        <!-- Histórico de transações -->
-        <TransactionHistory :transactions="transactions" />
-      </div>
-      
-      <!-- Projetos do ofertante ou projetos comprados pelo comprador -->
-      <ProjectsTable />
-
-      <UserExtras :user="user" :requirements="requirements" :documents="documents" />
 
       <DepositDialog v-model="depositDialog" @deposit="confirmDeposit" />
     </v-container>
@@ -43,30 +72,51 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import Footer from '@/components/layout/Footer.vue';
-import WalletSummary from '@/components/layout/WalletSummary.vue';
-import ProjectsTable from '@/components/tables/ProjectsTable.vue';
-import DepositDialog from '@/components/dialogs/DepositDialog.vue';
-import NavbarDashboard from '@/components/layout/NavbarDashboard.vue';
-import UserProfile from '@/components/layout/UserProfile.vue';
-import WalletChart from '@/components/layout/WalletChart.vue';
-import TransactionHistory from '@/components/layout/TransactionHistory.vue';
-import UserExtras from '../components/layout/UserExtras.vue';
-import { useAuthStore } from '@/store/auth';
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import Footer from "@/components/layout/Footer.vue";
+import WalletSummary from "@/components/layout/WalletSummary.vue";
+import ProjectsTable from "@/components/tables/ProjectsTable.vue";
+import DepositDialog from "@/components/dialogs/DepositDialog.vue";
+import NavbarDashboard from "@/components/layout/NavbarDashboard.vue";
+import UserProfile from "@/components/layout/UserProfile.vue";
+import WalletChart from "@/components/layout/WalletChart.vue";
+import TransactionHistory from "@/components/layout/TransactionHistory.vue";
+import UserExtras from "../components/layout/UserExtras.vue";
+import { useAuthStore } from "@/store/auth";
 
 // APIs
-import { getProjects } from '@/api/projects';
-import { getCompradorProfiles, getCompradorRequirements, getCompradorDocuments } from '@/api/comprador';
-import { getOfertanteProfiles, getOfertanteDocuments } from '@/api/ofertante';
-import { getTransactions } from '@/api/marketplace';
+import { getProjects } from "@/api/projects";
+import {
+  getCompradorProfiles,
+  getCompradorRequirements,
+  getCompradorDocuments,
+} from "@/api/comprador";
+import { getOfertanteProfiles, getOfertanteDocuments } from "@/api/ofertante";
+import { getTransactions } from "@/api/marketplace";
+import { getMe } from "../api/users";
 
 const authStore = useAuthStore();
 const router = useRouter();
 
-const user = computed(() => authStore.user || { name: 'Usuário', email: 'user@email.com', role: 'ofertante', user_type: 'ofertante' });
-const wallet = computed(() => authStore.wallet || { saldo: 12.90, totalComprado: 23.00, totalGasto: 200 });
+const user = ref(null);
+
+const wallet = computed(() => {
+  const saldo = transactions.value.reduce(
+    (acc, t) => acc + (t.type === "deposit" ? t.amount : -t.amount),
+    0
+  );
+
+  const totalComprado = transactions.value
+    .filter((t) => t.type === "deposit")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const totalGasto = transactions.value
+    .filter((t) => t.type === "withdraw")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  return { saldo, totalComprado, totalGasto };
+});
 
 const projects = ref([]);
 const transactions = ref([]);
@@ -74,78 +124,105 @@ const profile = ref(null);
 const requirements = ref(null);
 const documents = ref([]);
 const chartData = ref([]);
-
-const headers = [
-  { title: 'Título', value: 'title' },
-  { title: 'Status', value: 'status' },
-  { title: 'Orçamento (R$)', value: 'budget' },
-  { title: 'Ações', value: 'actions', sortable: false },
-];
-
 const depositDialog = ref(false);
+const loading = ref(true);
 
-const goCreateProject = () => router.push('/create-project');
+const goCreateProject = () => router.push("/create-project");
 const openProject = (item) => router.push(`/projects/${item.id}`);
 const editProject = (item) => router.push(`/projects/${item.id}/edit`);
-const openDeposit = () => { depositDialog.value = true; };
+
+const projectHeaders = [
+  { text: "Título", value: "title" },
+  { text: "Status", value: "status" },
+  { text: "Data de Criação", value: "created_at" },
+  { text: "Ações", value: "actions", sortable: false },
+];
+
+const openDeposit = () => {
+  depositDialog.value = true;
+};
 
 const confirmDeposit = (amount) => {
   if (amount <= 0) {
-    alert('Informe um valor válido.');
+    alert("Informe um valor válido.");
     return;
   }
-  if (typeof authStore.updateWallet === 'function') {
+  if (typeof authStore.updateWallet === "function") {
     const newSaldo = (authStore.wallet?.saldo || 0) + amount;
     authStore.updateWallet({ saldo: newSaldo });
   }
   depositDialog.value = false;
 };
 
-// Carregar dados conforme tipo de usuário
+// PRIMEIRO buscar o usuário, DEPOIS os dados relacionados
 onMounted(async () => {
-  if (!user.value) return;
+  try {
+    loading.value = true;
 
-  if (user.value.user_type === 'comprador') {
-    // Dados do comprador
-    const [profileRes, reqRes, docRes, transRes] = await Promise.all([
-      getCompradorProfiles({ user: user.value.id }),
-      getCompradorRequirements({ user: user.value.id }),
-      getCompradorDocuments({ user: user.value.id }),
-      getTransactions({ buyer: user.value.id }),
-    ]);
-    profile.value = profileRes.data[0];
-    requirements.value = reqRes.data[0];
-    documents.value = docRes.data;
-    transactions.value = transRes.data;
-    // Projetos comprados podem ser extraídos das transações
-    projects.value = transactions.value.map(t => t.project);
-    chartData.value = transactions.value.map(t => ({
-      date: t.date,
-      value: t.total_price,
-    }));
-  } else if (user.value.user_type === 'ofertante') {
-    // Dados do ofertante
-    const [profileRes, docRes, projRes, transRes] = await Promise.all([
-      getOfertanteProfiles({ user: user.value.id }),
-      getOfertanteDocuments({ user: user.value.id }),
-      getProjects({ ofertante: user.value.id }),
-      getTransactions({ project__ofertante: user.value.id }),
-    ]);
-    profile.value = profileRes.data[0];
-    documents.value = docRes.data;
-    projects.value = projRes.data;
-    transactions.value = transRes.data;
-    chartData.value = transactions.value.map(t => ({
-      date: t.date,
-      value: t.total_price,
-    }));
+    // 1️⃣ BUSCAR USUÁRIO PRIMEIRO
+    const userResponse = await getMe();
+    user.value = userResponse.data;
+    console.log("Usuário carregado:", user.value);
+
+    // 2️⃣ Agora sim verificar e buscar dados relacionados
+    if (!user.value) {
+      console.warn("Usuário não encontrado");
+      return;
+    }
+
+    if (user.value.user_type === "comprador") {
+      // Dados do comprador
+      const [profileRes, reqRes, docRes, transRes] = await Promise.all([
+        getCompradorProfiles({ user: user.value.id }),
+        getCompradorRequirements({ user: user.value.id }),
+        getCompradorDocuments({ user: user.value.id }),
+        getTransactions({ buyer: user.value.id }),
+      ]);
+
+      profile.value = profileRes.data[0];
+      requirements.value = reqRes.data[0];
+      documents.value = docRes.data;
+      transactions.value = transRes.data;
+      projects.value = transactions.value.map((t) => t.project);
+      chartData.value = transactions.value.map((t) => ({
+        date: t.date,
+        value: t.total_price,
+      }));
+    } else if (user.value.user_type === "ofertante") {
+      // Dados do ofertante
+      const [profileRes, docRes, projRes, transRes] = await Promise.all([
+        getOfertanteProfiles({ user: user.value.id }),
+        getOfertanteDocuments({ user: user.value.id }),
+        getProjects({ ofertante: user.value.id }),
+        getTransactions({ project__ofertante: user.value.id }),
+      ]);
+
+      profile.value = profileRes.data[0];
+      documents.value = docRes.data;
+      projects.value = projRes.data;
+      transactions.value = transRes.data;
+      chartData.value = transactions.value.map((t) => ({
+        date: t.date,
+        value: t.total_price,
+      }));
+      
+    }
+    console.log("Dados do ofertante carregados", {
+        projects: projects.value,
+        transactions: transactions.value,
+      });
+  } catch (error) {
+    console.error("Erro ao carregar dados do dashboard:", error);
+    // Fallback em caso de erro
+  } finally {
+    loading.value = false;
   }
 });
 </script>
 
 <style scoped>
 .dashboard-wrapper {
-  padding-top: 10px; 
+  padding-top: 10px;
 }
 
 .dashboard-container {
@@ -156,7 +233,7 @@ onMounted(async () => {
 }
 
 .dashboard-header {
-  border-bottom: 1px solid #00E5D0;
+  border-bottom: 1px solid #00e5d0;
   padding-bottom: 16px;
 }
 
@@ -167,7 +244,7 @@ onMounted(async () => {
 }
 
 .dashboard-subtitle {
-  color: #00CFC7;
+  color: #00cfc7;
   font-weight: 500;
 }
 
@@ -182,7 +259,7 @@ onMounted(async () => {
   width: 100%;
   font-weight: 600;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 229, 208, 0.10);
+  box-shadow: 0 2px 8px rgba(0, 229, 208, 0.1);
   transition: box-shadow 0.2s;
 }
 
@@ -207,18 +284,18 @@ onMounted(async () => {
 }
 
 @media (min-width: 960px) {
-  .actions-container { 
-    flex-direction: row; 
-    align-items: center; 
+  .actions-container {
+    flex-direction: row;
+    align-items: center;
   }
-  .action-btn { 
-    width: auto; 
+  .action-btn {
+    width: auto;
   }
 }
 
-.table-wrapper { 
-  width: 100%; 
-  overflow-x: auto; 
-  -webkit-overflow-scrolling: touch; 
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 </style>
