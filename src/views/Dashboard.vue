@@ -176,7 +176,7 @@ onMounted(async () => {
         getCompradorProfiles({ user: user.value.id }),
         getCompradorRequirements({ user: user.value.id }),
         getCompradorDocuments({ user: user.value.id }),
-        getTransactions({ buyer: user.value.id }),
+        getTransactions({ user: user.value.id }),
       ]);
 
       profile.value = profileRes.data[0];
