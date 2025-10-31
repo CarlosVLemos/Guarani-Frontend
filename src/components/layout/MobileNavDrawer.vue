@@ -137,10 +137,10 @@ const handleLogout = () => {
       </div>
 
       <!-- Botões de Ação (Usuário Logado) -->
-  <div v-if="authStore.isAuthenticated" class="px-4">
-        <!-- Você pode adicionar outros botões para usuários logados aqui, como "Meus Projetos" -->
-        <!-- <v-btn block class="btn btn--primary mb-3" @click="handleNavigateTo('/projects')">Meus Projetos</v-btn> -->
-        
+      <div v-if="authStore.isAuthenticated" class="px-4">
+        <v-list-item class="px-0 mb-2">
+          <v-btn block class="btn btn--primary" @click="handleNavigateTo('/me')">Minha conta</v-btn>
+        </v-list-item>
         <v-list-item class="px-0">
           <v-btn block variant="outlined" class="btn btn--secondary" @click="handleLogout">Sair</v-btn>
         </v-list-item>
