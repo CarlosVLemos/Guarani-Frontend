@@ -9,7 +9,7 @@ const props = defineProps({
   userType: {
     type: String,
     required: true,
-    validator: (value) => ['comprador', 'ofertante'].includes(value),
+    validator: (value) => ['comprador', 'ofertante', 'auditor'].includes(value),
   },
 });
 
@@ -26,12 +26,19 @@ const formData = reactive({
   ofertante_profile: {},
   comprador_profile: {},
   comprador_organization: {},
+  auditor_profile: {},
 });
 
 // Reage às mudanças na prop e reinicializa o formulário
 watchEffect(() => {
-  const type = props.userType || 'ofertante'; // Garante um valor padrão
+  const type = props.userType || 'ofertante';
   formData.user_type = type.toUpperCase();
+
+  // Reseta todos os perfis
+  formData.ofertante_profile = {};
+  formData.comprador_profile = {};
+  formData.comprador_organization = {};
+  formData.auditor_profile = {};
 
   if (type === 'ofertante') {
     formData.ofertante_profile = {
@@ -44,9 +51,7 @@ watchEffect(() => {
       website: '',
       description: '',
     };
-    formData.comprador_profile = {};
-    formData.comprador_organization = {};
-  } else {
+  } else if (type === 'comprador') {
     formData.comprador_profile = {
       contact_name: '',
       contact_position: '',
@@ -60,13 +65,22 @@ watchEffect(() => {
       industry_sector: null,
       website: '',
     };
-    formData.ofertante_profile = {};
+  } else if (type === 'auditor') {
+    formData.auditor_profile = {
+      contact_name: '',
+      phone: '',
+    };
   }
 });
 
-const formTitle = computed(() => 
-  props.userType === 'comprador' ? 'Registro de Comprador' : 'Registro de Ofertante'
-);
+const formTitle = computed(() => {
+  switch (props.userType) {
+    case 'comprador': return 'Registro de Comprador';
+    case 'ofertante': return 'Registro de Ofertante';
+    case 'auditor': return 'Registro de Auditor';
+    default: return 'Registro';
+  }
+});
 
 const orgTypeItems = [
   { title: 'ONG', value: 'ONG' },
@@ -101,9 +115,11 @@ const handleRegister = async () => {
 
   if (props.userType === 'ofertante') {
     payload.ofertante_profile = formData.ofertante_profile;
-  } else {
+  } else if (props.userType === 'comprador') {
     payload.comprador_profile = formData.comprador_profile;
     payload.comprador_organization = formData.comprador_organization;
+  } else if (props.userType === 'auditor') {
+    payload.auditor_profile = formData.auditor_profile;
   }
 
   try {
@@ -298,6 +314,26 @@ const goToLogin = () => {
                     v-model="formData.comprador_organization.website"
                     label="Website da Empresa"
                     prepend-inner-icon="mdi-web"
+                    variant="outlined"
+                    required
+                  />
+                </template>
+
+                <!-- Campos para Auditor -->
+                <template v-if="props.userType === 'auditor'">
+                  <v-divider class="my-4" />
+                  <h3 class="text-subtitle-1 font-weight-medium mb-3">Perfil do Auditor</h3>
+                  <v-text-field
+                    v-model="formData.auditor_profile.contact_name"
+                    label="Nome Completo"
+                    prepend-inner-icon="mdi-account-tie"
+                    variant="outlined"
+                    required
+                  />
+                  <v-text-field
+                    v-model="formData.auditor_profile.phone"
+                    label="Telefone para Contato"
+                    prepend-inner-icon="mdi-phone"
                     variant="outlined"
                     required
                   />

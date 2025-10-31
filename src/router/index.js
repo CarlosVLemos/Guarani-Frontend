@@ -42,7 +42,10 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
-    meta: { requiresAuth: true } // Rota protegida
+    meta: { 
+      requiresAuth: true,
+      allowedUsers: ['comprador', 'ofertante'] 
+    } // Rota protegida
   }
 ];
 
@@ -59,8 +62,13 @@ router.beforeEach(async (to, from, next) => {
   await authStore.initialAuthPromise;
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    // Se a rota exige autenticação e o usuário não está logado, redireciona para Home.
+    next({ name: 'Home' });
+  } else if (to.meta.allowedUsers && !to.meta.allowedUsers.includes(authStore.user?.user_type.toLowerCase())) {
+    // Se o usuário está logado mas não tem permissão, redireciona para Home.
     next({ name: 'Home' });
   } else {
+    // Permite o acesso.
     next();
   }
 });

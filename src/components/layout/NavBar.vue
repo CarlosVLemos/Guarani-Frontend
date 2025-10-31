@@ -122,6 +122,9 @@ onUnmounted(() => {
                       <v-list-item @click="navigateTo('/register/ofertante')">
                         <v-list-item-title>Como Ofertante</v-list-item-title>
                       </v-list-item>
+                      <v-list-item @click="navigateTo('/register/auditor')">
+                        <v-list-item-title>Como Auditor</v-list-item-title>
+                      </v-list-item>
                     </v-list>
                  </v-menu>
               </v-list-item>
@@ -132,11 +135,17 @@ onUnmounted(() => {
               <v-list-item v-if="authStore.user.is_superuser" to="/admin">
                 <v-list-item-title>Admin</v-list-item-title>
               </v-list-item>
+              <v-list-item v-if="authStore.user.user_type === 'comprador' || authStore.user.user_type === 'ofertante'" to="/dashboard">
+                <v-list-item-title>Dashboard</v-list-item-title>
+              </v-list-item>
               <v-list-item to="/projects">
                 <v-list-item-title>Meus Projetos</v-list-item-title>
               </v-list-item>
-              <v-list-item to="/create-project">
+              <v-list-item v-if="authStore.user.user_type === 'comprador'" to="/create-project">
                 <v-list-item-title>Criar Projeto</v-list-item-title>
+              </v-list-item>
+              <v-list-item v-if="authStore.user.user_type === 'auditor'" to="/pending-projects">
+                <v-list-item-title>Projetos para Auditar</v-list-item-title>
               </v-list-item>
               <v-divider></v-divider>
               <v-list-item @click="handleLogout">

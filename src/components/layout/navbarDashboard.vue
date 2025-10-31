@@ -65,8 +65,9 @@ onUnmounted(() => {
             </v-avatar>
             <span class="user-name">{{ authStore.user.name || authStore.user.email }}</span>
           </div>
-          <v-btn class="btn btn--primary mr-3" rounded elevation="2" to="/projects">Meus Projetos</v-btn>
-          <v-btn class="btn btn--primary-variant mr-3" rounded elevation="2" to="/create-project">Criar Projeto</v-btn>
+          <v-btn v-if="authStore.user.user_type === 'comprador' || authStore.user.user_type === 'ofertante'" class="btn btn--primary mr-3" rounded elevation="2" to="/projects">Meus Projetos</v-btn>
+          <v-btn v-if="authStore.user.user_type === 'comprador'" class="btn btn--primary-variant mr-3" rounded elevation="2" to="/create-project">Criar Projeto</v-btn>
+          <v-btn v-if="authStore.user.user_type === 'auditor'" class="btn btn--primary-variant mr-3" rounded elevation="2" to="/pending-projects">Projetos para Auditar</v-btn>
           <v-btn variant="outlined" class="btn btn--secondary ml-3" @click="handleLogout">Sair</v-btn>
         </template>
         <ThemeToggleButton class="ml-4" />
