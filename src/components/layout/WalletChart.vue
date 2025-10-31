@@ -17,8 +17,20 @@ const props = defineProps({ data: Array })
 
 const chartSource = props.data ;
 
+function formatDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
 const chartData = computed(() => ({
-  labels: chartSource.map(d => d.date),
+  labels: chartSource.map(d => formatDate(d.date)),
   datasets: [{
     label: 'Saldo (R$)',
     data: chartSource.map(d => d.value),

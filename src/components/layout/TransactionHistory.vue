@@ -20,6 +20,9 @@
             {{ formatAmount(item.amount) }}
           </span>
         </template>
+        <template #item.timestamp="{ item }">
+          {{ formatDate(item.timestamp) }}
+        </template>
       </v-data-table>
     </div>
   </v-card>
@@ -30,15 +33,21 @@ const props = defineProps({ transactions: Array });
 const transactions = props.transactions;
 
 const headers = [
-  { title: 'Data', value: 'date' },
-  { title: 'Tipo', value: 'type' },
-  { title: 'Valor', value: 'amount' },
-  { title: 'Descrição', value: 'description' },
+  { title: 'Data', value: 'timestamp' },
+  { title: 'Projeto', value: 'project_name' },
+  { title: 'Quantidade', value: 'quantity' },
+  { title: 'Preço por Crédito', value: 'price_per_credit_at_purchase' },
+  { title: 'Valor Total', value: 'total_price' },
 ];
 
 function formatAmount(value) {
   const v = Number(value) || 0;
   return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 </script>
 <style scoped>
@@ -53,12 +62,21 @@ function formatAmount(value) {
 .table-wrapper { width: 100%; overflow-x: auto; }
 .info-text { color: #00CFC7; }
 
+.v-data-table {
+  font-size: 13px;
+}
+
+.v-data-table td, .v-data-table th {
+  padding: 4px 8px !important;
+  min-height: 28px;
+}
+
 .v-data-table-header,
 .v-data-table thead {
+  font-size: 13px;
   background: transparent !important;
   color: #004d4a !important;
   font-weight: 600;
-  font-size: 15px;
   border-bottom: 1px solid #00E5D0;
   z-index: 1;
 }

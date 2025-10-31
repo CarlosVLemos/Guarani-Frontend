@@ -127,9 +127,7 @@ const chartData = ref([]);
 const depositDialog = ref(false);
 const loading = ref(true);
 
-const goCreateProject = () => router.push("/create-project");
-const openProject = (item) => router.push(`/projects/${item.id}`);
-const editProject = (item) => router.push(`/projects/${item.id}/edit`);
+
 
 const projectHeaders = [
   { text: "Título", value: "title" },
@@ -164,36 +162,40 @@ onMounted(async () => {
     user.value = userResponse.data;
     console.log("Usuário carregado:", user.value);
 
+    console.log("Carregando dados do dashboard para o transition:", getTransactions({ user: user.value.id }));
+    // console.log("carregando:", getCompradorDocuments({ user: user.value.id }));
+
     // 2️⃣ Agora sim verificar e buscar dados relacionados
     if (!user.value) {
       console.warn("Usuário não encontrado");
       return;
     }
 
-    if (user.value.user_type === "comprador") {
+    if (user.value.user_type === "COMPRADOR") {
       // Dados do comprador
-      const [profileRes, reqRes, docRes, transRes] = await Promise.all([
-        getCompradorProfiles({ user: user.value.id }),
-        getCompradorRequirements({ user: user.value.id }),
-        getCompradorDocuments({ user: user.value.id }),
+      const [ transRes] = await Promise.all([
         getTransactions({ user: user.value.id }),
       ]);
 
-      profile.value = profileRes.data[0];
-      requirements.value = reqRes.data[0];
-      documents.value = docRes.data;
-      transactions.value = transRes.data;
-      projects.value = transactions.value.map((t) => t.project);
+      transactions.value = transRes?.data?.results || [];
+
       chartData.value = transactions.value.map((t) => ({
-        date: t.date,
-        value: t.total_price,
+        date: t.timestamp,
+        value: Number(t.total_price),
       }));
-    } else if (user.value.user_type === "ofertante") {
+
+      console.log("Dados do comprador carregados", {
+        profile: profile.value,
+        requirements: requirements.value,
+        documents: documents.value,
+        transactions: transactions.value,
+        projects: projects.value,
+        chartData: chartData.value,
+      });
+    } else if (user.value.user_type === "OFERTANTE") {
       // Dados do ofertante
-      const [profileRes, docRes, projRes, transRes] = await Promise.all([
-        getOfertanteProfiles({ user: user.value.id }),
-        getOfertanteDocuments({ user: user.value.id }),
-        getProjects({ ofertante: user.value.id }),
+      const [ transRes] = await Promise.all([
+       
         getTransactions({ project__ofertante: user.value.id }),
       ]);
 
@@ -207,10 +209,7 @@ onMounted(async () => {
       }));
       
     }
-    console.log("Dados do ofertante carregados", {
-        projects: projects.value,
-        transactions: transactions.value,
-      });
+    
   } catch (error) {
     console.error("Erro ao carregar dados do dashboard:", error);
     // Fallback em caso de erro
