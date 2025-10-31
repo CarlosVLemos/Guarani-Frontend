@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { login } from '@/api/auth';
+import { useAuthStore } from '@/store/auth';
 
 // O router passa 'userType' como uma prop.
 const props = defineProps({
@@ -12,6 +14,7 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Reatividade para os campos do formulário
 const formData = ref({
@@ -20,18 +23,31 @@ const formData = ref({
   rememberMe: false,
 });
 
+const loading = ref(false);
+const error = ref(null);
+
 const formTitle = computed(() => 
   props.userType === 'comprador' ? 'Login de Comprador' : 'Login de Ofertante'
 );
 
-const handleLogin = () => {
-  console.log(`Tentativa de login para ${props.userType}:`, formData.value);
-  // Aqui você chamaria sua API de login
-  // Ex: const { user, token } = await authApi.login(formData.value, props.userType);
-  // authStore.login(user, token);
-  
-  // Após o sucesso, redirecionar para o dashboard apropriado
-  router.push('/'); 
+const handleLogin = async () => {
+  loading.value = true;
+  error.value = null;
+  console.log(`Tentando login com:`, { email: formData.value.email });
+  const credentials = { email: formData.value.email, password: formData.value.password };
+  console.log(`Tentando login com:`, credentials);
+  try {
+    const credentials = { email: formData.value.email, password: formData.value.password };
+    const response = await login(credentials);
+
+    console.log('✅ Login bem-sucedido! Resposta da API:', response.data);
+    router.push('/'); // Redireciona para a home após o login
+  } catch (err) {
+    console.error('❌ Erro no login:', err.response?.data || err.message);
+    error.value = 'E-mail ou senha inválidos. Tente novamente.';
+  } finally {
+    loading.value = false;
+  }
 };
 
 const goToRegister = () => {
@@ -77,6 +93,11 @@ const goToRegister = () => {
                 color="primary"
               ></v-checkbox>
 
+              <!-- Exibição de Erro -->
+              <v-alert v-if="error" type="error" density="compact" class="mt-2 mb-4">
+                {{ error }}
+              </v-alert>
+
               <v-btn
                 type="submit"
                 color="primary"
@@ -84,6 +105,7 @@ const goToRegister = () => {
                 large
                 class="mt-4"
               >
+                <v-progress-circular v-if="loading" indeterminate size="24" class="mr-2" />
                 Entrar
               </v-btn>
             </v-form>

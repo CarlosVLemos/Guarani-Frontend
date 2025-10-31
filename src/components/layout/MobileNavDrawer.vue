@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiLeaf, mdiChevronDown } from '@mdi/js';
+import { mdiLeaf, mdiChevronDown, mdiAccountCircle } from '@mdi/js';
 import ThemeToggleButton from '@/components/ui/ThemeToggleButton.vue';
 
 // Props para receber dados do componente pai (NavBar)
@@ -80,6 +80,23 @@ const handleLogout = () => {
       <v-divider class="my-4" />
       
       <!-- Botões de Ação (Usuário Deslogado) -->
+      <!-- Seção do Usuário Logado -->
+      <div v-if="authStore.user" class="px-4">
+        <v-list-item class="user-info-item">
+            <template v-slot:prepend>
+              <v-avatar color="grey-darken-1" class="mr-4">
+                <!-- Se o usuário tiver foto, mostra a imagem -->
+                <v-img v-if="authStore.user.profile_picture" :src="authStore.user.profile_picture" :alt="authStore.user.full_name"></v-img>
+                <!-- Senão, mostra um ícone padrão cinza -->
+                <svg-icon v-else type="mdi" :path="mdiAccountCircle" size="32" />
+              </v-avatar>
+            </template>
+            <v-list-item-title class="font-weight-bold">{{ authStore.user.full_name }}</v-list-item-title>
+            <v-list-item-subtitle>{{ authStore.user.email }}</v-list-item-subtitle>
+        </v-list-item>
+        <v-divider class="my-4" />
+      </div>
+
       <div v-if="!authStore.user">
         <v-list-item class="px-4">
           <v-btn 
@@ -118,14 +135,11 @@ const handleLogout = () => {
       </div>
 
       <!-- Botões de Ação (Usuário Logado) -->
-      <div v-if="authStore.user">
-        <v-list-item class="px-4">
-          <v-btn block class="btn btn--primary mb-3" @click="handleNavigateTo('/projects')">Meus Projetos</v-btn>
-        </v-list-item>
-        <v-list-item class="px-4">
-          <v-btn block class="btn btn--primary-variant mb-3" @click="handleNavigateTo('/create-project')">Criar Projeto</v-btn>
-        </v-list-item>
-        <v-list-item class="px-4">
+      <div v-if="authStore.user" class="px-4">
+        <!-- Você pode adicionar outros botões para usuários logados aqui, como "Meus Projetos" -->
+        <!-- <v-btn block class="btn btn--primary mb-3" @click="handleNavigateTo('/projects')">Meus Projetos</v-btn> -->
+        
+        <v-list-item class="px-0">
           <v-btn block variant="outlined" class="btn btn--secondary" @click="handleLogout">Sair</v-btn>
         </v-list-item>
       </div>
@@ -226,6 +240,10 @@ const handleLogout = () => {
   opacity: 0;
   transform: translateY(-10px);
   max-height: 0;
+}
+
+.user-info-item .v-avatar {
+  border: 2px solid var(--brand-primary);
 }
 
 /* --- Estilos do Status do Tema --- */
