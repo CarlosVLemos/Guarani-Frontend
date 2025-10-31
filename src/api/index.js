@@ -18,6 +18,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore();
     const token = authStore.token; // 2. Pegar o token diretamente da store
+    console.log("Token adicionado no cabeçalho:", token);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { jwtDecode } from 'jwt-decode';
 import { login as apiLogin } from '@/api/auth';
+import { getMe } from '../api/users';
 import { getUserById } from '@/api/users';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -32,13 +33,24 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(credentials) {
     try {
       const response = await apiLogin(credentials);
+      console.log("Resposta do login:", response);
       const accessToken = response.data.access;
+      const refreshToken = response.data.refresh;
+
       if (accessToken) {
         token.value = accessToken;
         localStorage.setItem('authToken', accessToken);
-        await fetchUser(); // Busca os dados do usuário após o login
-      } else {
-        throw new Error('Token de acesso não recebido.');
+        // fetch current user info
+        try {
+          const me = await getMe();
+          user.value = me.data;
+          localStorage.setItem('authUser', JSON.stringify(user.value));
+        } catch (e) {
+          console.error('Falha ao carregar dados do usuário atual:', e);
+          user.value = { email: credentials.email };
+          localStorage.setItem('authUser', JSON.stringify(user.value));
+        }
+        return true;
       }
     } catch (error) {
       console.error("Falha no login:", error);

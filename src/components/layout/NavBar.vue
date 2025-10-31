@@ -82,7 +82,7 @@ onUnmounted(() => {
           {{ item.label }}
         </v-btn>
       </div>
-      
+
       <!-- Botões de Ação Desktop -->
       <div class="d-none d-md-flex align-center">
         <ThemeToggleButton />
@@ -284,6 +284,8 @@ onUnmounted(() => {
   transform: rotate(90deg);
   color: #00E5D0 !important;
 }
+
+/* (pill removida a pedido) */
 
 /* Ajustes Responsivos */
 @media (max-width: 960px) {

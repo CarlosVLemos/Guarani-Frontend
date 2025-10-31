@@ -97,6 +97,13 @@ const features = ref([
       "Apoio direto às comunidades de Belém do Pará e preservação da floresta amazônica",
     color: "info",
   },
+  {
+    icon: "mdi-robot",
+    title: "Assistente de IA Integrado",
+    description:
+      "Nossa inteligência artificial ajuda você a entender créditos de carbono e otimizar seu uso na plataforma",
+    color: "purple",
+  },
 ]);
 </script>
 
