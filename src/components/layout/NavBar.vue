@@ -32,6 +32,7 @@ const scrollTo = (elementId) => {
   const element = document.getElementById(elementId);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    console.log(`Scrolled to element with ID: ${elementId}`);
   }
   drawer.value = false;
 };
@@ -39,6 +40,8 @@ const scrollTo = (elementId) => {
 const navigateTo = (path) => {
   router.push(path);
   drawer.value = false;
+
+  console.log(`Navigated to path: ${path}`);
 };
 
 // Hooks do ciclo de vida
@@ -261,7 +264,7 @@ onUnmounted(() => {
 
 :deep(.btn--primary) {
   background: linear-gradient(135deg, #00E5D0, #00CFC7) !important;
-  color: #004d4a !important;
+  color: #fff !important;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 229, 208, 0.3);
 }

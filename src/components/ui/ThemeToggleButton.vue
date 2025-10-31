@@ -96,7 +96,7 @@ const { isDark, toggleTheme } = useTheme();
 }
 
 .theme-icon {
-  color: var(--vt-c-white);
+  color: white;
   font-size: 22px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }

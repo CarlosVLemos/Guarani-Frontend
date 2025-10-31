@@ -19,8 +19,9 @@
     <div >
       participantes
     </div>
-    <div>
-      Carlos Victor Lemos da Silva
+    <div class="d-flex flex-column">
+      <p>Carlos Victor Lemos da Silva</p>
+      <p>Cauê Tamirana</p>
     </div>
     
     <div class="text-caption footer-text-secondary">
@@ -47,12 +48,12 @@ const icons = [
 
 /* Ícones sociais */
 :deep(.social-icon) {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(255, 255, 255, 0.962) !important;
   transition: all 0.3s ease;
 }
 
 :deep(.social-icon:hover) {
-  color: #00E5D0 !important;
+  color: #cdfbf7 !important;
   background-color: rgba(255, 255, 255, 0.15) !important;
   transform: translateY(-3px);
 }
