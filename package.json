@@ -11,6 +11,7 @@
   "dependencies": {
     "@jamescoyle/vue-icon": "^0.1.2",
     "@mdi/js": "^7.4.47",
+    "@n8n/chat": "^0.63.0",
     "axios": "^1.13.1",
     "mdi": "^2.2.43",
     "pinia": "^3.0.3",

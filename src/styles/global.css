@@ -70,3 +70,32 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* === Ajuste de estilo para o chat da Guarini === */
+
+/* cor do texto digitado */
+#n8n-chat input,
+#n8n-chat textarea,
+.n8n-chat-input__field {
+  color: #222 !important;            /* texto escuro */
+  background-color: #fff !important; /* fundo branco */
+}
+
+/* placeholder visível */
+#n8n-chat input::placeholder,
+#n8n-chat textarea::placeholder {
+  color: #888 !important;
+}
+
+/* botão de enviar */
+.n8n-chat-input__send-button {
+  background-color: #198754 !important; /* verde Guarini */
+  color: #fff !important;
+  border-radius: 8px;
+}
+
+/* área do cabeçalho e balões de chat */
+.n8n-chat-window,
+.n8n-chat-message {
+  color: #222 !important;
+}
