@@ -1,20 +1,37 @@
 <template>
   <v-card class="profile-card pa-4 mb-6">
-    <div class="d-flex align-center">
-      <v-avatar size="56" class="mr-4">
-        <img :src="user.avatar || 'https://i.pravatar.cc/56'" alt="avatar" />
-      </v-avatar>
-      <div>
-        <div class="profile-name">{{ user.name || user.email }}</div>
-        <div class="profile-email">{{ user.email }}</div>
-        <div class="profile-role">Tipo: {{ user.role }}</div>
+    <div class="d-flex align-center justify-space-between">
+      <div class="d-flex align-center">
+        <v-avatar size="56" class="mr-4">
+          <img :src="user.avatar || 'https://i.pravatar.cc/56'" alt="avatar" />
+        </v-avatar>
+        <div>
+          <div class="profile-name">{{ user.name || user.email }}</div>
+          <div class="profile-email">{{ user.email }}</div>
+          <div class="profile-role">Tipo: {{ user.role }}</div>
+        </div>
       </div>
+      <v-btn color="error" @click="handleLogout">
+        <v-icon left>mdi-logout</v-icon>
+        Sair
+      </v-btn>
     </div>
   </v-card>
 </template>
 <script setup>
-const props = defineProps({ user: Object });
+import { useAuthStore } from '@/store/auth'
+import { useRouter } from 'vue-router'
+
+const props = defineProps({ user: Object })
+const authStore = useAuthStore()
+const router = useRouter()
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/')
+}
 </script>
+
 <style scoped>
 .profile-card {
   border-radius: 18px;
