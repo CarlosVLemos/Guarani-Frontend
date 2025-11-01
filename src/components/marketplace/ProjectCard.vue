@@ -2,6 +2,10 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+// Importa as imagens específicas dos assets
+import sitioImage from '@/assets/Sitiodoalvaro.jpeg';
+import samaraImage from '@/assets/Samararenova.jpeg';
+
 const props = defineProps({
   project: { type: Object, required: true },
 });
@@ -10,9 +14,27 @@ const emit = defineEmits(['buy']);
 const router = useRouter();
 
 const imageUrl = computed(() => {
-  // assume project.documents may have images; fallback placeholder
-  const doc = (props.project.documents || []).find(d => d.file);
-  return doc?.file || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop';
+  // 1. Lógica para projetos específicos
+  if (props.project.name === 'sitio do alvaro amarelo') {
+    return sitioImage;
+  }
+  if (props.project.name === 'Samara renova guama') {
+    return samaraImage;
+  }
+
+  // 2. Lógica original para imagens do backend
+  if (props.project.image) return props.project.image;
+
+  const documents = props.project.documents || [];
+  const mainPhoto = documents.find(d => d.name === '__main_photo__');
+  if (mainPhoto) return mainPhoto.file;
+
+  const anyImage = documents.find(d => d.file);
+  if (anyImage) return anyImage.file;
+
+  // 3. Lógica de placeholder aleatório, mas consistente por projeto
+  const seed = props.project.id || props.project.name; // Usa ID ou nome como semente
+  return `https://picsum.photos/seed/${seed}/400/300`;
 });
 
 const priceLabel = computed(() => {

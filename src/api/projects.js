@@ -33,3 +33,7 @@ export const uploadProjectDocument = (projectId, formData) => {
     },
   });
 };
+
+export const deleteProjectDocument = (projectId, documentId) => {
+  return apiClient.delete(`/projects/${projectId}/documents/${documentId}/`);
+};

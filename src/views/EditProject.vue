@@ -1,6 +1,6 @@
 <template>
   <div>
-    <navbarDashboard />
+    <NavBar />
     <v-container>
       <div v-if="loading" class="text-center pa-10">
         <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
@@ -33,6 +33,17 @@
             <v-alert v-if="updateError" type="error" class="mb-4">{{ updateError }}</v-alert>
             <v-btn type="submit" color="primary" block size="large" :loading="updating">Salvar Alterações</v-btn>
           </v-form>
+        </v-card-text>
+
+        <v-divider class="my-6"></v-divider>
+
+        <!-- Seção Foto Principal -->
+        <v-card-text>
+          <h3 class="text-h6 font-weight-medium mb-4">Foto Principal do Projeto</h3>
+          <p class="text-caption mb-4">Esta é a imagem que aparecerá nos cards e no topo da página de detalhes.</p>
+          <v-file-input v-model="coverImageFile" label="Selecionar foto principal" variant="outlined" accept="image/*" show-size></v-file-input>
+          <v-alert v-if="coverImageError" type="error" class="my-4">{{ coverImageError }}</v-alert>
+          <v-btn @click="handleCoverImageUpload" color="secondary" :loading="coverImageUploading" :disabled="!coverImageFile">Atualizar Foto Principal</v-btn>
         </v-card-text>
 
         <v-divider class="my-6"></v-divider>
@@ -71,8 +82,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getProjectById, updateProject, uploadProjectDocument } from '@/api/projects';
-import navbarDashboard from '@/components/layout/navbarDashboard.vue';
+import { getProjectById, updateProject, uploadProjectDocument, deleteProjectDocument } from '@/api/projects';
+import NavBar from '@/components/layout/NavBar.vue';
 import Footer from '@/components/layout/Footer.vue';
 
 const route = useRoute();
@@ -86,6 +97,11 @@ const error = ref(null);
 // Estado do formulário de detalhes
 const updating = ref(false);
 const updateError = ref(null);
+
+// Estado da foto principal
+const coverImageFile = ref(null);
+const coverImageUploading = ref(false);
+const coverImageError = ref(null);
 
 // Estado do formulário de upload
 const filesToUpload = ref([]);
@@ -124,13 +140,22 @@ const submitProjectUpdate = async () => {
   updateError.value = null;
   try {
     const projectId = route.params.id;
-    // A API de update pode não precisar de todos os campos, mas enviamos o objeto principal
-    await updateProject(projectId, project.value);
-    // Opcional: mostrar uma notificação de sucesso
+    
+    const projectDataToUpdate = {
+      name: project.value.name,
+      description: project.value.description,
+      project_type: project.value.project_type,
+      location: project.value.location,
+      // A API pode esperar strings para campos numéricos, uma causa comum de erros 400.
+      carbon_credits_available: String(project.value.carbon_credits_available),
+      price_per_credit: String(project.value.price_per_credit),
+    };
+
+    await updateProject(projectId, projectDataToUpdate);
     alert('Projeto atualizado com sucesso!');
   } catch (err) {
-    console.error("Erro ao atualizar projeto:", err);
-    updateError.value = "Ocorreu um erro ao salvar as alterações.";
+    console.error("Erro detalhado ao atualizar projeto:", err.response ? err.response.data : err);
+    updateError.value = "Ocorreu um erro ao salvar as alterações. Verifique os campos e tente novamente.";
   } finally {
     updating.value = false;
   }
@@ -165,6 +190,39 @@ const handleUpload = async () => {
   alert(`${successCount} arquivo(s) enviado(s) com sucesso!`);
   // Recarrega os dados do projeto para mostrar os novos documentos
   await fetchProject(); 
+};
+
+const handleCoverImageUpload = async () => {
+  if (!coverImageFile.value) return;
+  coverImageUploading.value = true;
+  coverImageError.value = null;
+
+  const projectId = route.params.id;
+
+  try {
+    // Verifica se já existe uma foto principal e a deleta
+    const mainPhoto = project.value.documents.find(doc => doc.name === '__main_photo__');
+    if (mainPhoto) {
+      await deleteProjectDocument(projectId, mainPhoto.id);
+    }
+
+    // Envia a nova foto principal
+    const formData = new FormData();
+    formData.append('name', '__main_photo__');
+    formData.append('file', coverImageFile.value);
+
+    await uploadProjectDocument(projectId, formData);
+    
+    alert('Foto principal atualizada com sucesso!');
+    coverImageFile.value = null;
+    await fetchProject(); // Recarrega os dados para refletir a mudança
+
+  } catch (err) {
+    console.error('Erro ao atualizar foto principal:', err);
+    coverImageError.value = 'Ocorreu um erro ao atualizar a foto principal.';
+  } finally {
+    coverImageUploading.value = false;
+  }
 };
 
 const finishEditing = () => {

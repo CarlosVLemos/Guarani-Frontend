@@ -2,7 +2,9 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getMe } from '@/api/users';
+import { getMyProjects } from '@/api/projects';
 import { useAuthStore } from '@/store/auth';
+import ProjectCard from '@/components/marketplace/ProjectCard.vue';
 import NavBar from '@/components/layout/NavBar.vue';
 import Footer from '@/components/layout/Footer.vue';
 
@@ -12,6 +14,9 @@ const auth = useAuthStore();
 const loading = ref(false);
 const error = ref(null);
 const me = ref(auth.user || null);
+
+const projectsLoading = ref(false);
+const myProjects = ref([]);
 
 const fetchMe = async () => {
   loading.value = true;
@@ -32,12 +37,26 @@ const fetchMe = async () => {
   }
 };
 
+const fetchMyProjects = async () => {
+  projectsLoading.value = true;
+  try {
+    const { data } = await getMyProjects();
+    myProjects.value = data.results ?? data ?? [];
+  } catch (e) {
+    console.error('Error fetching user projects:', e);
+    // Non-critical error, so we don't block the UI
+  } finally {
+    projectsLoading.value = false;
+  }
+};
+
 onMounted(() => {
   if (!auth.isAuthenticated) {
     router.push({ name: 'Login', params: { userType: 'comprador' }, query: { redirect: '/me' } });
     return;
   }
   fetchMe();
+  fetchMyProjects();
 });
 </script>
 
@@ -81,6 +100,27 @@ onMounted(() => {
             </v-card>
           </v-col>
         </v-row>
+
+        <!-- Seção Meus Projetos -->
+        <div class="mt-10">
+            <h2 class="text-h5 text-md-h4 font-weight-bold mb-6">Meus Projetos</h2>
+
+            <div v-if="projectsLoading" class="text-center py-12">
+              <v-progress-circular indeterminate color="primary" />
+            </div>
+
+            <v-row v-else-if="myProjects.length" dense>
+              <v-col v-for="p in myProjects" :key="p.id" cols="12" sm="6" md="4">
+                <ProjectCard :project="p" />
+              </v-col>
+            </v-row>
+
+            <v-alert v-else border="start" variant="tonal" color="info" class="pa-4">
+              Você ainda não criou nenhum projeto.
+              <v-btn to="/create-project" color="primary" variant="text" class="ml-2">Criar meu primeiro projeto</v-btn>
+            </v-alert>
+        </div>
+
       </v-container>
     </main>
     <Footer />

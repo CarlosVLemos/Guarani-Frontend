@@ -12,6 +12,8 @@
       </v-alert>
 
       <v-card v-else-if="project" class="mt-6" flat border>
+        <v-img v-if="mainImageUrl" :src="mainImageUrl" height="300" cover></v-img>
+
         <!-- Cabeçalho com Nome e Status -->
         <v-card-title class="d-flex align-center flex-wrap">
           <span class="text-h4 font-weight-bold mr-4">{{ project.name }}</span>
@@ -118,10 +120,19 @@ const project = ref(null);
 const loading = ref(true);
 const error = ref(null);
 
+const mainImageUrl = computed(() => {
+  if (!project.value?.documents) return null;
+  const mainPhoto = project.value.documents.find(d => d.name === '__main_photo__');
+  if (mainPhoto) return mainPhoto.file;
+  // Fallback to the first image if no main photo is set
+  const anyImage = project.value.documents.find(d => d.file);
+  return anyImage?.file || null;
+});
+
 const isOwner = computed(() => {
   if (!project.value || !authStore.user) return false;
-  // Assumes the API returns `project.owner` as the owner's user ID
-  return project.value.owner === authStore.user.id;
+  // Correction: The owner's ID is nested in the 'ofertante' object.
+  return project.value.ofertante?.id === authStore.user.id;
 });
 
 const statusMap = {
