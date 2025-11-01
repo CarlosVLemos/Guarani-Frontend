@@ -52,12 +52,19 @@ const chartOptions = {
 <style scoped>
 
 .chart-card {
-  border-radius: 18px;
-  box-shadow: 0 2px 16px rgba(0, 229, 208, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 229, 208, 0.10);
   border: 1px solid #00E5D0;
   background: rgba(0, 229, 208, 0.04);
+  padding: 12px 16px !important;
+  min-height: 220px;
+  max-width: 480px;
   flex: 1;
 }
 
+.text-subtitle-1 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
 
 </style>

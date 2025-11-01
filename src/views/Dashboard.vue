@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-wrapper">
-    <NavbarDashboard />
+    <Navbar />
     <v-container fluid class="dashboard-container">
       <!-- 🔄 Loading State -->
       <div v-if="loading" class="text-center py-16">
@@ -50,9 +50,11 @@
           <TransactionHistory :transactions="transactions" />
         </div>
 
-        <ProjectsTable :projects="projects" :headers="projectHeaders" />
+        <ProjectsTable v-if="user.user_type === OFERTANTE" :projects="projects" :headers="projectHeaders" />
+
 
         <UserExtras
+          
           :user="user"
           :requirements="requirements"
           :documents="documents"
@@ -78,7 +80,7 @@ import Footer from "@/components/layout/Footer.vue";
 import WalletSummary from "@/components/layout/WalletSummary.vue";
 import ProjectsTable from "@/components/tables/ProjectsTable.vue";
 import DepositDialog from "@/components/dialogs/DepositDialog.vue";
-import NavbarDashboard from "@/components/layout/NavbarDashboard.vue";
+import Navbar from "@/components/layout/Navbar.vue";
 import UserProfile from "@/components/layout/UserProfile.vue";
 import WalletChart from "@/components/layout/WalletChart.vue";
 import TransactionHistory from "@/components/layout/TransactionHistory.vue";
@@ -95,6 +97,8 @@ import {
 import { getOfertanteProfiles, getOfertanteDocuments } from "@/api/ofertante";
 import { getTransactions } from "@/api/marketplace";
 import { getMe } from "../api/users";
+import { getMyProjects } from "@/api/projects";
+import { createTransaction } from "@/api/marketplace";
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -127,29 +131,19 @@ const chartData = ref([]);
 const depositDialog = ref(false);
 const loading = ref(true);
 
-
-
 const projectHeaders = [
-  { text: "Título", value: "title" },
-  { text: "Status", value: "status" },
-  { text: "Data de Criação", value: "created_at" },
-  { text: "Ações", value: "actions", sortable: false },
+  { title: "Nome", value: "name" },
+  { title: "Tipo", value: "project_type" },
+  { title: "Status", value: "status" },
+  { title: "Créditos Disponíveis", value: "carbon_credits_available" },
+  { title: "Preço por Crédito", value: "price_per_credit" },
+  { title: "Ofertante", value: "ofertante.organization_name" },
+  { title: "Data de Criação", value: "created_at" },
+  { title: "Ações", value: "actions", sortable: false },
 ];
 
 const openDeposit = () => {
   depositDialog.value = true;
-};
-
-const confirmDeposit = (amount) => {
-  if (amount <= 0) {
-    alert("Informe um valor válido.");
-    return;
-  }
-  if (typeof authStore.updateWallet === "function") {
-    const newSaldo = (authStore.wallet?.saldo || 0) + amount;
-    authStore.updateWallet({ saldo: newSaldo });
-  }
-  depositDialog.value = false;
 };
 
 // PRIMEIRO buscar o usuário, DEPOIS os dados relacionados
@@ -162,7 +156,18 @@ onMounted(async () => {
     user.value = userResponse.data;
     console.log("Usuário carregado:", user.value);
 
-    console.log("Carregando dados do dashboard para o transition:", getTransactions({ user: user.value.id }));
+    console.log(
+      "Carregando dados do dashboard para o transition:",
+      getTransactions({ user: user.value.id })
+    );
+    console.log(
+      "carregando projetos:",
+      getMyProjects({ ofertante: user.value.id })
+    );
+    // console.log(
+    //   "carregando projetos:",
+    //   getProjects({ ofertante: user.value.id })
+    // );
     // console.log("carregando:", getCompradorDocuments({ user: user.value.id }));
 
     // 2️⃣ Agora sim verificar e buscar dados relacionados
@@ -173,7 +178,7 @@ onMounted(async () => {
 
     if (user.value.user_type === "COMPRADOR") {
       // Dados do comprador
-      const [ transRes] = await Promise.all([
+      const [transRes] = await Promise.all([
         getTransactions({ user: user.value.id }),
       ]);
 
@@ -183,33 +188,20 @@ onMounted(async () => {
         date: t.timestamp,
         value: Number(t.total_price),
       }));
-
-      console.log("Dados do comprador carregados", {
-        profile: profile.value,
-        requirements: requirements.value,
-        documents: documents.value,
-        transactions: transactions.value,
-        projects: projects.value,
-        chartData: chartData.value,
-      });
     } else if (user.value.user_type === "OFERTANTE") {
       // Dados do ofertante
-      const [ transRes] = await Promise.all([
-       
+      const [projRes, transRes] = await Promise.all([
+        getMyProjects({ ofertante: user.value.id }),
         getTransactions({ project__ofertante: user.value.id }),
       ]);
 
-      profile.value = profileRes.data[0];
-      documents.value = docRes.data;
-      projects.value = projRes.data;
-      transactions.value = transRes.data;
+      projects.value = projRes?.data?.results;
+      transactions.value = transRes?.data?.results || [];
       chartData.value = transactions.value.map((t) => ({
-        date: t.date,
-        value: t.total_price,
+        date: t.timestamp,
+        value: Number(t.total_price),
       }));
-      
     }
-    
   } catch (error) {
     console.error("Erro ao carregar dados do dashboard:", error);
     // Fallback em caso de erro
@@ -270,7 +262,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  gap: 24px;
+  gap: 2px;
   margin-bottom: 32px;
 }
 
