@@ -33,8 +33,7 @@ const imageUrl = computed(() => {
   if (anyImage) return anyImage.file;
 
   // 3. Lógica de placeholder aleatório e temático
-  const keywords = 'nature,sustainability,reforestation,environment';
-  return `https://source.unsplash.com/400x300/?${keywords}&sig=${props.project.id}`;
+  return `https://picsum.photos/seed/${props.project.id}/400/300`;
 });
 
 const priceLabel = computed(() => {

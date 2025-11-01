@@ -50,8 +50,23 @@
           <TransactionHistory :transactions="transactions" />
         </div>
 
-        <ProjectsTable v-if="user.user_type === 'OFERTANTE'" :projects="projects" :headers="projectHeaders" />
+        <!-- Seções específicas para COMPRADOR -->
+        <template v-if="user.user_type === 'COMPRADOR'">
+          <h3 class="text-h6 mb-4 mt-8 dashboard-subtitle">Seu Histórico de Gastos</h3>
+          <v-card class="mb-6 pa-4" rounded="lg" elevation="2">
+            <Line :data="compradorChartData" :options="chartOptions" />
+          </v-card>
+        </template>
 
+        <!-- Seções específicas para OFERTANTE -->
+        <template v-else-if="user.user_type === 'OFERTANTE'">
+          <ProjectsTable :projects="projects" :headers="projectHeaders" class="mb-6" />
+
+          <h3 class="text-h6 mb-4 mt-8 dashboard-subtitle">Créditos Vendidos por Projeto</h3>
+          <v-card class="mb-6 pa-4" rounded="lg" elevation="2">
+            <Doughnut :data="ofertanteChartData" :options="chartOptions" />
+          </v-card>
+        </template>
 
         <UserExtras
           
@@ -86,6 +101,11 @@ import WalletChart from "@/components/layout/WalletChart.vue";
 import TransactionHistory from "@/components/layout/TransactionHistory.vue";
 import UserExtras from "../components/layout/UserExtras.vue";
 import { useAuthStore } from "@/store/auth";
+import { Line, Doughnut } from 'vue-chartjs';
+import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, ArcElement } from 'chart.js';
+
+ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, ArcElement);
+
 
 // APIs
 import { getProjects } from "@/api/projects";
@@ -95,7 +115,7 @@ import {
   getCompradorDocuments,
 } from "@/api/comprador";
 import { getOfertanteProfiles, getOfertanteDocuments } from "@/api/ofertante";
-import { getTransactions } from "@/api/marketplace";
+import { getTransactions, getPublicTransactions } from "@/api/marketplace";
 import { getMe } from "../api/users";
 import { getMyProjects } from "@/api/projects";
 import { createTransaction } from "@/api/marketplace";
@@ -109,11 +129,25 @@ const user = computed(() => authStore.user);
 const loading = ref(true);
 const projects = ref([]);
 const transactions = ref([]);
+const publicTransactions = ref([]); // New ref for public transactions
 const profile = ref(null);
 const requirements = ref(null);
 const documents = ref([]);
 const chartData = ref([]);
 const depositDialog = ref(false);
+const chartOptions = ref({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top',
+    },
+    title: {
+      display: true,
+      text: 'Gráfico',
+    },
+  },
+});
 
 const wallet = computed(() => {
   // Lógica da wallet permanece a mesma
@@ -130,7 +164,54 @@ const wallet = computed(() => {
   return { saldo, totalComprado, totalGasto };
 });
 
+const goCreateProject = () => {
+  router.push({ name: 'CreateProject' });
+};
 
+const compradorChartData = computed(() => {
+  // Exemplo: Gastos por mês
+  const monthlySpending = transactions.value.reduce((acc, t) => {
+    if (t.type === 'withdraw') {
+      const month = new Date(t.timestamp).toLocaleString('default', { month: 'short', year: 'numeric' });
+      acc[month] = (acc[month] || 0) + Number(t.amount);
+    }
+    return acc;
+  }, {});
+
+  return {
+    labels: Object.keys(monthlySpending),
+    datasets: [
+      {
+        label: 'Gastos Mensais (R$)',
+        backgroundColor: '#00E5D0',
+        borderColor: '#00CFC7',
+        data: Object.values(monthlySpending),
+      },
+    ],
+  };
+});
+
+const ofertanteChartData = computed(() => {
+  // Exemplo: Créditos vendidos por projeto (Doughnut Chart)
+  const salesByProject = projects.value.reduce((acc, project) => {
+    const projectSales = transactions.value.filter(t => t.project === project.id && t.type === 'deposit'); // Assuming 'deposit' means a credit was bought from the project
+    const totalCreditsSold = projectSales.reduce((sum, t) => sum + (t.carbon_credits_amount || 0), 0);
+    if (totalCreditsSold > 0) {
+      acc[project.name] = totalCreditsSold;
+    }
+    return acc;
+  }, {});
+
+  return {
+    labels: Object.keys(salesByProject),
+    datasets: [
+      {
+        backgroundColor: ['#00E5D0', '#00CFC7', '#00B2A9', '#009688', '#007A6B'],
+        data: Object.values(salesByProject),
+      },
+    ],
+  };
+});
 
 const projectHeaders = [
   { title: "Nome", value: "name" },
@@ -141,10 +222,6 @@ const projectHeaders = [
   { title: "Ofertante", value: "ofertante.organization_name" },
   { title: "Ações", value: "actions", sortable: false },
 ];
-
-const openDeposit = () => {
-  depositDialog.value = true;
-};
 
 onMounted(async () => {
   loading.value = true;
@@ -163,6 +240,11 @@ onMounted(async () => {
 
     console.log(`Carregando dados do dashboard para o usuário tipo: ${user.value.user_type}`);
 
+    const [publicTransRes] = await Promise.all([
+      getPublicTransactions(),
+    ]);
+    publicTransactions.value = publicTransRes?.data?.results || [];
+
     if (user.value.user_type === "COMPRADOR") {
       const [transRes] = await Promise.all([
         getTransactions({ user: user.value.id }),
@@ -179,7 +261,7 @@ onMounted(async () => {
     }
 
     // Atualiza os dados do gráfico após buscar as transações
-    chartData.value = transactions.value.map((t) => ({
+    chartData.value = (transactions.value.length > 0 ? transactions.value : publicTransactions.value).map((t) => ({
       date: t.timestamp,
       value: Number(t.total_price),
     }));
