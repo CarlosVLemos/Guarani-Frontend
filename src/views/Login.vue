@@ -1,28 +1,7 @@
 <script setup>
-import NavBar from '@/components/layout/NavBar.vue';
-import Hero from '@/components/landing/Hero.vue';
-import Features from '@/components/landing/Features.vue';
-import About from '@/components/landing/About.vue';
-import CTA from '@/components/landing/CTA.vue';
-import Footer from '@/components/layout/Footer.vue';
+import LoginForm from '@/components/forms/LoginForm.vue';
 </script>
 
 <template>
-  <div>
-    <NavBar />
-    <main>
-      <Hero id="hero"/>
-      <Features id="features" />
-      <About id="about"/>
-      <CTA />
-    </main>
-    <Footer />
-  </div>
+  <LoginForm />
 </template>
-
-<style scoped>
-/* Adicione estilos específicos para a Home.vue se necessário */
-main > section {
-  padding: 4rem 0;
-}
-</style>

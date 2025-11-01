@@ -17,11 +17,13 @@
       Projeto criado e idealizado por Guarani Technologies TDAH.
     </div>
     <div >
-      participantes
+      Participantes:
     </div>
     <div class="d-flex flex-column">
-      <p>Carlos Victor Lemos da Silva</p>
+      <p>Carlos Lemos</p>
       <p>Cauê Tamirana</p>
+      <p>Emanuelle Ferreira</p>
+      <p>Pedro Coriolano</p>
     </div>
     
     <div class="text-caption footer-text-secondary">

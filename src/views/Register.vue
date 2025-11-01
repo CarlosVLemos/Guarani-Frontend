@@ -1,28 +1,11 @@
 <script setup>
-import NavBar from '@/components/layout/NavBar.vue';
-import Hero from '@/components/landing/Hero.vue';
-import Features from '@/components/landing/Features.vue';
-import About from '@/components/landing/About.vue';
-import CTA from '@/components/landing/CTA.vue';
-import Footer from '@/components/layout/Footer.vue';
+import RegisterForm from '@/components/forms/RegisterForm.vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const userType = route.params.userType || 'comprador'; // Default to 'comprador' if no param
 </script>
 
 <template>
-  <div>
-    <NavBar />
-    <main>
-      <Hero id="hero"/>
-      <Features id="features" />
-      <About id="about"/>
-      <CTA />
-    </main>
-    <Footer />
-  </div>
+  <RegisterForm :user-type="userType" />
 </template>
-
-<style scoped>
-/* Adicione estilos específicos para a Home.vue se necessário */
-main > section {
-  padding: 4rem 0;
-}
-</style>
