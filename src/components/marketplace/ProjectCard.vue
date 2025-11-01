@@ -7,6 +7,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['buy']);
+const router = useRouter();
 
 const imageUrl = computed(() => {
   // assume project.documents may have images; fallback placeholder
@@ -17,10 +18,14 @@ const imageUrl = computed(() => {
 const priceLabel = computed(() => {
   return props.project.price_per_credit || props.project.price_per_credit_at_purchase || '—';
 });
+
+const goToDetails = () => {
+  router.push({ name: 'ProjectDetails', params: { id: props.project.id } });
+};
 </script>
 
 <template>
-  <v-card class="project-card" rounded="lg" elevation="4">
+  <v-card class="project-card" rounded="lg" elevation="4" @click="goToDetails">
     <v-img :src="imageUrl" height="180" cover class="project-image" />
 
     <v-card-item>
@@ -46,7 +51,7 @@ const priceLabel = computed(() => {
     </v-card-text>
 
     <v-card-actions>
-      <v-btn color="primary" class="btn--buy" @click="$emit('buy', project)">Comprar crédito</v-btn>
+      <v-btn color="primary" class="btn--buy" @click.stop="$emit('buy', project)">Comprar crédito</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -54,6 +59,7 @@ const priceLabel = computed(() => {
 <style scoped>
 .project-card {
   transition: transform .25s ease, box-shadow .25s ease;
+  cursor: pointer;
 }
 .project-card:hover {
   transform: translateY(-3px);

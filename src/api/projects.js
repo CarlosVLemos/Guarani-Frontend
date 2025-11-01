@@ -25,3 +25,11 @@ export const deleteProject = (id) => {
 export const getMyProjects = () => {
   return apiClient.get('/projects/my/');
 };
+
+export const uploadProjectDocument = (projectId, formData) => {
+  return apiClient.post(`/projects/${projectId}/documents/`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};

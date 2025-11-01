@@ -18,12 +18,12 @@
             <div class="text-caption dashboard-subtitle">
               Visão geral da sua conta
               <span v-if="user.user_type === 'COMPRADOR'"> (Comprador)</span>
-              <span v-else> (Ofertante)</span>
+              <span v-else-if="user.user_type === 'OFERTANTE'"> (Ofertante)</span>
             </div>
           </div>
           <div class="actions-container">
             <v-btn
-              v-if="user.user_type === 'OFERTANTE'"
+              v-if="user.user_type === 'COMPRADOR'"
               class="action-btn"
               color="primary"
               elevation="2"
@@ -61,14 +61,9 @@
 
       <!-- ⚠️ Estado de erro -->
       <div v-else class="text-center py-16">
-        <v-icon size="64" color="error">mdi-alert-circle</v-icon>
-        <p class="mt-4">Erro ao carregar dados do usuário</p>
+        <v-icon size="64" color="error">mdi-alert-circle-outline</v-icon>
+        <p class="mt-4">Ocorreu um erro ao carregar os dados do dashboard.</p>
       </div>
-      
-      <!-- Projetos do ofertante ou projetos comprados pelo comprador -->
-      <ProjectsTable :projects="projects" :headers="headers" />
-
-      <UserExtras :user="user" :requirements="requirements" :documents="documents" />
 
       <DepositDialog v-model="depositDialog" @deposit="confirmDeposit" />
     </v-container>
@@ -99,30 +94,14 @@ import {
 } from "@/api/comprador";
 import { getOfertanteProfiles, getOfertanteDocuments } from "@/api/ofertante";
 import { getTransactions } from "@/api/marketplace";
-import { getMe } from "../api/users";
 
 const authStore = useAuthStore();
 const router = useRouter();
 
-const user = ref(null);
+// --- Use o authStore como fonte da verdade ---
+const user = computed(() => authStore.user);
 
-const wallet = computed(() => {
-  const saldo = transactions.value.reduce(
-    (acc, t) => acc + (t.type === "deposit" ? t.amount : -t.amount),
-    0
-  );
-
-  const totalComprado = transactions.value
-    .filter((t) => t.type === "deposit")
-    .reduce((acc, t) => acc + t.amount, 0);
-
-  const totalGasto = transactions.value
-    .filter((t) => t.type === "withdraw")
-    .reduce((acc, t) => acc + t.amount, 0);
-
-  return { saldo, totalComprado, totalGasto };
-});
-
+const loading = ref(true);
 const projects = ref([]);
 const transactions = ref([]);
 const profile = ref(null);
@@ -130,15 +109,27 @@ const requirements = ref(null);
 const documents = ref([]);
 const chartData = ref([]);
 const depositDialog = ref(false);
-const loading = ref(true);
 
-
+const wallet = computed(() => {
+  // Lógica da wallet permanece a mesma
+  const saldo = transactions.value.reduce(
+    (acc, t) => acc + (t.type === "deposit" ? t.amount : -t.amount),
+    0
+  );
+  const totalComprado = transactions.value
+    .filter((t) => t.type === "deposit")
+    .reduce((acc, t) => acc + t.amount, 0);
+  const totalGasto = transactions.value
+    .filter((t) => t.type === "withdraw")
+    .reduce((acc, t) => acc + t.amount, 0);
+  return { saldo, totalComprado, totalGasto };
+});
 
 const projectHeaders = [
-  { text: "Título", value: "title" },
-  { text: "Status", value: "status" },
-  { text: "Data de Criação", value: "created_at" },
-  { text: "Ações", value: "actions", sortable: false },
+  { title: "Título", value: "title" },
+  { title: "Status", value: "status" },
+  { title: "Data de Criação", value: "created_at" },
+  { title: "Ações", value: "actions", sortable: false },
 ];
 
 const openDeposit = () => {
@@ -146,6 +137,7 @@ const openDeposit = () => {
 };
 
 const confirmDeposit = (amount) => {
+  // Lógica de depósito permanece a mesma
   if (amount <= 0) {
     alert("Informe um valor válido.");
     return;
@@ -157,67 +149,38 @@ const confirmDeposit = (amount) => {
   depositDialog.value = false;
 };
 
-// PRIMEIRO buscar o usuário, DEPOIS os dados relacionados
 onMounted(async () => {
   try {
     loading.value = true;
-
-    // 1️⃣ BUSCAR USUÁRIO PRIMEIRO
-    const userResponse = await getMe();
-    user.value = userResponse.data;
-    console.log("Usuário carregado:", user.value);
-
-    console.log("Carregando dados do dashboard para o transition:", getTransactions({ user: user.value.id }));
-    // console.log("carregando:", getCompradorDocuments({ user: user.value.id }));
-
-    // 2️⃣ Agora sim verificar e buscar dados relacionados
     if (!user.value) {
-      console.warn("Usuário não encontrado");
+      console.warn("Usuário não encontrado no mounted hook.");
       return;
     }
 
     if (user.value.user_type === "COMPRADOR") {
-      // Dados do comprador
-      const [ transRes] = await Promise.all([
+      const [transRes] = await Promise.all([
         getTransactions({ user: user.value.id }),
       ]);
-
       transactions.value = transRes?.data?.results || [];
+      // Outras buscas de dados para comprador podem ser adicionadas aqui
 
-      chartData.value = transactions.value.map((t) => ({
-        date: t.timestamp,
-        value: Number(t.total_price),
-      }));
-
-      console.log("Dados do comprador carregados", {
-        profile: profile.value,
-        requirements: requirements.value,
-        documents: documents.value,
-        transactions: transactions.value,
-        projects: projects.value,
-        chartData: chartData.value,
-      });
     } else if (user.value.user_type === "OFERTANTE") {
-      // Dados do ofertante
-      const [ transRes] = await Promise.all([
-       
+      const [projRes, transRes] = await Promise.all([
+        getProjects({ ofertante: user.value.id }),
         getTransactions({ project__ofertante: user.value.id }),
       ]);
-
-      profile.value = profileRes.data[0];
-      documents.value = docRes.data;
-      projects.value = projRes.data;
-      transactions.value = transRes.data;
-      chartData.value = transactions.value.map((t) => ({
-        date: t.date,
-        value: t.total_price,
-      }));
-      
+      projects.value = projRes?.data?.results || [];
+      transactions.value = transRes?.data?.results || [];
     }
-    
+
+    // Processamento de dados comum
+    chartData.value = transactions.value.map((t) => ({
+      date: t.timestamp || t.date,
+      value: Number(t.total_price),
+    }));
+
   } catch (error) {
     console.error("Erro ao carregar dados do dashboard:", error);
-    // Fallback em caso de erro
   } finally {
     loading.value = false;
   }

@@ -17,6 +17,18 @@ const routes = [
     component: () => import('../views/Projects.vue'),
   },
   {
+    path: '/projects/:id',
+    name: 'ProjectDetails',
+    component: () => import('../views/ProjectDetails.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/projects/:id/edit',
+    name: 'EditProject',
+    component: () => import('../views/EditProject.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/me',
     name: 'Me',
     component: () => import('../views/Me.vue'),
@@ -37,6 +49,15 @@ const routes = [
     // Lazy load o componente do formulário
     component: () => import('../components/forms/RegisterForm.vue'),
     props: true // Passa os parâmetros da rota (userType) como props para o componente
+  },
+  {
+    path: '/create-project',
+    name: 'CreateProject',
+    component: () => import('../views/CreateProject.vue'),
+    meta: { 
+      requiresAuth: true,
+      allowedUsers: ['comprador']
+    }
   },
   {
     path: '/dashboard',
