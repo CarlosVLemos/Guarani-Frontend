@@ -12,25 +12,26 @@
         dense
         item-key="id"
         class="elevation-0 themed-table"
+        :items-per-page="5"
       >
-        <template #item.amount="{ item }">
-          <span :class="item.type === 'deposit' ? 'deposit' : 'withdraw'">
-            {{ item.type === 'deposit' ? '+' : '-' }}
-            R$
-            {{ formatAmount(item.amount) }}
-          </span>
-        </template>
         <template #item.timestamp="{ item }">
           {{ formatDate(item.timestamp) }}
+        </template>
+        <template #item.total_price="{ item }">
+          R$ {{ formatAmount(item.total_price) }}
+        </template>
+        <template #item.project_name="{ item }">
+          <span class="truncate-text" :title="item.project_name">
+            {{ item.project_name }}
+          </span>
         </template>
       </v-data-table>
     </div>
   </v-card>
 </template>
+
 <script setup>
 const props = defineProps({ transactions: Array });
-
-const transactions = props.transactions;
 
 const headers = [
   { title: 'Data', value: 'timestamp' },
@@ -50,34 +51,35 @@ function formatDate(value) {
   return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 </script>
+
 <style scoped>
 .history-card {
-  border-radius: 18px;
-  box-shadow: 0 2px 16px rgba(0, 229, 208, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 229, 208, 0.10);
   border: 1px solid #00E5D0;
   background: rgba(0, 229, 208, 0.04);
+  padding: 12px 12px !important;
+  overflow: auto;
 }
-.deposit { color: #00CFC7; font-weight: 600; }
-.withdraw { color: #e53935; font-weight: 600; }
 .table-wrapper { width: 100%; overflow-x: auto; }
 .info-text { color: #00CFC7; }
-
-.v-data-table {
-  font-size: 13px;
-}
-
-.v-data-table td, .v-data-table th {
-  padding: 4px 8px !important;
-  min-height: 28px;
-}
-
+.v-data-table { font-size: 12px; }
+.v-data-table td, .v-data-table th { padding: 3px 6px !important; min-height: 22px; }
 .v-data-table-header,
 .v-data-table thead {
-  font-size: 13px;
+  font-size: 12px;
   background: transparent !important;
   color: #004d4a !important;
   font-weight: 600;
   border-bottom: 1px solid #00E5D0;
   z-index: 1;
+}
+.truncate-text {
+  display: inline-block;
+  max-width: 160px; /* ajuste conforme necessário */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 </style>

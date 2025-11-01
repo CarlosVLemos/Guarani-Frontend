@@ -8,7 +8,7 @@
         <p class="mt-4 text-caption">Carregando dados...</p>
       </div>
 
-      <!-- ✅ Conteúdo quando carregado -->
+      <!-- Conteúdo quando carregado -->
       <template v-else-if="user">
         <div
           class="d-flex align-center justify-space-between mb-6 dashboard-header"
@@ -22,15 +22,6 @@
             </div>
           </div>
           <div class="actions-container">
-            <v-btn
-              v-if="user.user_type === 'OFERTANTE'"
-              class="action-btn"
-              color="primary"
-              elevation="2"
-              @click="goCreateProject"
-            >
-              <v-icon left>mdi-plus</v-icon> Criar Projeto
-            </v-btn>
             <v-btn
               class="action-btn"
               variant="outlined"
@@ -50,7 +41,7 @@
           <TransactionHistory :transactions="transactions" />
         </div>
 
-        <ProjectsTable v-if="user.user_type === OFERTANTE" :projects="projects" :headers="projectHeaders" />
+        <ProjectsTable v-if="user.user_type === 'OFERTANTE'" :projects="projects" :headers="projectHeaders" />
 
 
         <UserExtras
@@ -138,7 +129,6 @@ const projectHeaders = [
   { title: "Créditos Disponíveis", value: "carbon_credits_available" },
   { title: "Preço por Crédito", value: "price_per_credit" },
   { title: "Ofertante", value: "ofertante.organization_name" },
-  { title: "Data de Criação", value: "created_at" },
   { title: "Ações", value: "actions", sortable: false },
 ];
 
@@ -264,6 +254,7 @@ onMounted(async () => {
   justify-content: space-around;
   gap: 2px;
   margin-bottom: 32px;
+  max-height: 30rem;
 }
 
 @media (max-width: 960px) {
