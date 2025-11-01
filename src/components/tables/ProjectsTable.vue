@@ -58,35 +58,35 @@ function formatAmount(value) {
   box-shadow: 0 2px 10px rgba(0, 229, 208, 0.10);
   border: 1px solid #00E5D0;
   background: rgba(0, 229, 208, 0.04);
-  padding: 8px 8px !important; /* menos espaço interno */
-  max-width: 900px; /* limita largura */
-  margin: 0 auto;   /* centraliza */
+  padding: 24px 24px;
+  
+  
 }
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
-  max-height: 320px; /* limita altura da tabela */
+  /* Removido max-height para altura normal */
   -webkit-overflow-scrolling: touch;
 }
 .themed-table >>> .v-data-table__wrapper {
   background: transparent;
 }
 .v-data-table td, .v-data-table th {
-  padding: 2px 6px !important; /* menos espaço nas células */
-  font-size: 12px;
-  min-height: 20px; /* diminui altura mínima */
+  padding: 16px 16px !important;
+  font-size: 16px;
+  min-height: 48px;
 }
 .action-btn {
-  width: 24px;
-  height: 24px;
-  font-size: 16px;
-  margin: 0 2px;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  margin: 0 8px;
 }
 .text-subtitle-1 {
-  font-size: 14px;
+  font-size: 18px;
 }
 .text-caption {
-  font-size: 11px;
+  font-size: 14px;
 }
 .info-text {
   color: #00CFC7;

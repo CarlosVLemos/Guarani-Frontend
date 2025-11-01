@@ -9,6 +9,10 @@ export const getTransactions = (params) => {
   return apiClient.get('/marketplace/transactions/', { params });
 };
 
+export const getPublicTransactions = (params) => {
+  return apiClient.get('/marketplace/public-transactions/', { params });
+};
+
 /**
  * Cria uma nova transação de marketplace (compra de créditos).
  * @param {object} transactionData Os dados da nova transação.
