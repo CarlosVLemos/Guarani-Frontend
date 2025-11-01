@@ -80,7 +80,7 @@ import Footer from "@/components/layout/Footer.vue";
 import WalletSummary from "@/components/layout/WalletSummary.vue";
 import ProjectsTable from "@/components/tables/ProjectsTable.vue";
 import DepositDialog from "@/components/dialogs/DepositDialog.vue";
-import Navbar from "@/components/layout/Navbar.vue";
+import Navbar from "@/components/layout/NavBar.vue";
 import UserProfile from "@/components/layout/UserProfile.vue";
 import WalletChart from "@/components/layout/WalletChart.vue";
 import TransactionHistory from "@/components/layout/TransactionHistory.vue";
@@ -130,14 +130,7 @@ const wallet = computed(() => {
   return { saldo, totalComprado, totalGasto };
 });
 
-const projects = ref([]);
-const transactions = ref([]);
-const profile = ref(null);
-const requirements = ref(null);
-const documents = ref([]);
-const chartData = ref([]);
-const depositDialog = ref(false);
-const loading = ref(true);
+
 
 const projectHeaders = [
   { title: "Nome", value: "name" },
@@ -155,59 +148,43 @@ const openDeposit = () => {
 };
 
 onMounted(async () => {
+  loading.value = true;
   try {
-    loading.value = true;
-
-    // 1️⃣ BUSCAR USUÁRIO PRIMEIRO
-    const userResponse = await getMe();
-    user.value = userResponse.data;
-    console.log("Usuário carregado:", user.value);
-
-    console.log(
-      "Carregando dados do dashboard para o transition:",
-      getTransactions({ user: user.value.id })
-    );
-    console.log(
-      "carregando projetos:",
-      getMyProjects({ ofertante: user.value.id })
-    );
-    // console.log(
-    //   "carregando projetos:",
-    //   getProjects({ ofertante: user.value.id })
-    // );
-    // console.log("carregando:", getCompradorDocuments({ user: user.value.id }));
-
-    // 2️⃣ Agora sim verificar e buscar dados relacionados
+    // O usuário agora é reativo e vem diretamente do authStore.
+    // A lógica do store já garante que o usuário seja buscado na inicialização.
     if (!user.value) {
-      console.warn("Usuário não encontrado no mounted hook.");
-      return;
+      console.warn("Dashboard: Usuário não disponível no momento do mount. O store deve resolver isso.");
+      // Opcional: você pode esperar o usuário ser resolvido se necessário
+      // await authStore.initialAuthPromise;
+      if (!user.value) {
+        console.error("Dashboard: Usuário ainda não disponível após espera.");
+        return;
+      }
     }
 
+    console.log(`Carregando dados do dashboard para o usuário tipo: ${user.value.user_type}`);
+
     if (user.value.user_type === "COMPRADOR") {
-      // Dados do comprador
       const [transRes] = await Promise.all([
         getTransactions({ user: user.value.id }),
       ]);
       transactions.value = transRes?.data?.results || [];
 
-      chartData.value = transactions.value.map((t) => ({
-        date: t.timestamp,
-        value: Number(t.total_price),
-      }));
     } else if (user.value.user_type === "OFERTANTE") {
-      // Dados do ofertante
       const [projRes, transRes] = await Promise.all([
-        getMyProjects({ ofertante: user.value.id }),
+        getMyProjects(), // getMyProjects não precisa de ID, ele usa o token
         getTransactions({ project__ofertante: user.value.id }),
       ]);
-
-      projects.value = projRes?.data?.results;
+      projects.value = projRes?.data?.results || [];
       transactions.value = transRes?.data?.results || [];
-      chartData.value = transactions.value.map((t) => ({
-        date: t.timestamp,
-        value: Number(t.total_price),
-      }));
     }
+
+    // Atualiza os dados do gráfico após buscar as transações
+    chartData.value = transactions.value.map((t) => ({
+      date: t.timestamp,
+      value: Number(t.total_price),
+    }));
+
   } catch (error) {
     console.error("Erro ao carregar dados do dashboard:", error);
   } finally {

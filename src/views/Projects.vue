@@ -32,8 +32,12 @@ const fetchProjects = async () => {
   error.value = null;
   try {
     const { data } = await getProjects({ status: 'ACTIVE' });
-    // API could be paginated; support data.results fallback
-    projects.value = data.results ?? data ?? [];
+    const results = data.results ?? data ?? [];
+    
+    // Filtra para garantir que todos os projetos na lista são únicos pelo ID
+    const uniqueProjects = Array.from(new Map(results.map(p => [p.id, p])).values());
+    
+    projects.value = uniqueProjects;
   } catch (e) {
     console.error(e);
     error.value = 'Falha ao carregar projetos.';

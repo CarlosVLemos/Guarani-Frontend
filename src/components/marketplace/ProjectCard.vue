@@ -32,9 +32,9 @@ const imageUrl = computed(() => {
   const anyImage = documents.find(d => d.file);
   if (anyImage) return anyImage.file;
 
-  // 3. Lógica de placeholder aleatório, mas consistente por projeto
-  const seed = props.project.id || props.project.name; // Usa ID ou nome como semente
-  return `https://picsum.photos/seed/${seed}/400/300`;
+  // 3. Lógica de placeholder aleatório e temático
+  const keywords = 'nature,sustainability,reforestation,environment';
+  return `https://source.unsplash.com/400x300/?${keywords}&sig=${props.project.id}`;
 });
 
 const priceLabel = computed(() => {
