@@ -8,6 +8,12 @@ import { getUserById } from '@/api/users';
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('authToken') || null);
   const user = ref(JSON.parse(localStorage.getItem('authUser')) || null);
+  // Wallet state (lightweight), used by Dashboard/Profile summaries
+  const wallet = ref(JSON.parse(localStorage.getItem('authWallet')) || {
+    saldo: 0,
+    totalComprado: 0,
+    totalGasto: 0,
+  });
   const isAuthResolved = ref(false);
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
@@ -56,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     token.value = null;
     user.value = null;
+    wallet.value = { saldo: 0, totalComprado: 0, totalGasto: 0 };
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
   }
@@ -66,10 +73,12 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     user,
+    wallet,
     isAuthenticated,
     login,
     logout,
     fetchUser,
     initialAuthPromise, // Exporta a promessa diretamente
+    updateWallet,
   };
 });

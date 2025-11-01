@@ -1,12 +1,17 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getMe } from '@/api/users';
-import { getMyProjects } from '@/api/projects';
+import { getProjects } from '@/api/projects';
+import { getTransactions } from '@/api/marketplace';
 import { useAuthStore } from '@/store/auth';
 import ProjectCard from '@/components/marketplace/ProjectCard.vue';
 import NavBar from '@/components/layout/NavBar.vue';
 import Footer from '@/components/layout/Footer.vue';
+import UserProfile from '@/components/layout/UserProfile.vue';
+import WalletSummary from '@/components/layout/WalletSummary.vue';
+import TransactionHistory from '@/components/layout/TransactionHistory.vue';
+import ProjectsTable from '@/components/tables/ProjectsTable.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -17,6 +22,12 @@ const me = ref(auth.user || null);
 
 const projectsLoading = ref(false);
 const myProjects = ref([]);
+const transactions = ref([]);
+const projects = ref([]);
+
+const wallet = computed(() => auth.wallet || { saldo: 0, totalComprado: 0, totalGasto: 0 });
+const isComprador = computed(() => (me.value?.user_type || auth.user?.user_type) === 'comprador');
+const isOfertante = computed(() => (me.value?.user_type || auth.user?.user_type) === 'ofertante');
 
 const fetchMe = async () => {
   loading.value = true;
@@ -50,13 +61,38 @@ const fetchMyProjects = async () => {
   }
 };
 
-onMounted(() => {
+const fetchDataByRole = async () => {
+  if (!me.value) return;
+  try {
+    if (me.value.user_type === 'comprador') {
+      const { data } = await getTransactions({ buyer: me.value.id });
+      transactions.value = data || [];
+      // Atualiza totais da carteira com base nas transações (aproximação)
+      const totalComprado = transactions.value.reduce((sum, t) => sum + (Number(t.total_price) || 0), 0);
+      auth.updateWallet({ totalComprado });
+    } else if (me.value.user_type === 'ofertante') {
+      const [projRes, transRes] = await Promise.all([
+        getProjects({ ofertante: me.value.id }),
+        getTransactions({ project__ofertante: me.value.id }),
+      ]);
+      projects.value = projRes.data || [];
+      transactions.value = transRes.data || [];
+      // Atualiza totais (aproximação)
+      const totalGasto = transactions.value.reduce((sum, t) => sum + (Number(t.total_price) || 0), 0);
+      auth.updateWallet({ totalGasto });
+    }
+  } catch (e) {
+    console.error('Falha ao carregar dados adicionais:', e);
+  }
+};
+
+onMounted(async () => {
   if (!auth.isAuthenticated) {
     router.push({ name: 'Login', params: { userType: 'comprador' }, query: { redirect: '/me' } });
     return;
   }
-  fetchMe();
-  fetchMyProjects();
+  await fetchMe();
+  await fetchDataByRole();
 });
 </script>
 
@@ -65,7 +101,7 @@ onMounted(() => {
     <NavBar />
     <main>
       <v-container class="py-8">
-        <h1 class="text-h5 text-md-h4 font-weight-bold mb-4">Minha conta</h1>
+        <h1 class="text-h5 text-md-h4 font-weight-bold mb-6">Meu Perfil</h1>
 
         <v-alert v-if="error" type="error" class="mb-4">{{ error }}</v-alert>
 
@@ -73,33 +109,23 @@ onMounted(() => {
           <v-progress-circular indeterminate color="primary" />
         </div>
 
-        <v-row v-else>
-          <v-col cols="12" md="6">
-            <v-card class="mb-4" variant="elevated">
-              <v-card-title class="text-subtitle-1">Informações básicas</v-card-title>
-              <v-card-text>
-                <div class="kv"><span class="k">ID</span><span class="v">{{ me?.id }}</span></div>
-                <div class="kv"><span class="k">E-mail</span><span class="v">{{ me?.email }}</span></div>
-                <div class="kv"><span class="k">Tipo</span><span class="v">{{ me?.user_type }}</span></div>
-                <div class="kv"><span class="k">Verificado</span><span class="v">{{ me?.is_verified ? 'Sim' : 'Não' }}</span></div>
-                <div class="kv"><span class="k">Status verificação</span><span class="v">{{ me?.verification_status }}</span></div>
-                <div class="kv"><span class="k">Criado em</span><span class="v">{{ me?.created_at }}</span></div>
-                <div class="kv"><span class="k">Atualizado em</span><span class="v">{{ me?.updated_at }}</span></div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-card variant="elevated">
-              <v-card-title class="text-subtitle-1">Acessos</v-card-title>
-              <v-card-text>
-                <div class="kv"><span class="k">Staff</span><span class="v">{{ me?.is_staff ? 'Sim' : 'Não' }}</span></div>
-                <div class="kv"><span class="k">Superuser</span><span class="v">{{ me?.is_superuser ? 'Sim' : 'Não' }}</span></div>
-                <div class="kv"><span class="k">Auditor</span><span class="v">{{ me?.is_auditor ? 'Sim' : 'Não' }}</span></div>
-                <div class="kv"><span class="k">Grupos</span><span class="v">{{ (me?.groups || []).join(', ') || '—' }}</span></div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+        <template v-else>
+          <!-- Card do usuário -->
+          <UserProfile :user="{ ...me, role: me?.user_type }" class="mb-6" />
+
+          <!-- Resumo da carteira -->
+          <WalletSummary :wallet="wallet" />
+
+          <div class="dashboard-row mt-4">
+            <!-- Histórico de transações -->
+            <TransactionHistory :transactions="transactions" />
+          </div>
+
+          <!-- Projetos apenas para ofertante -->
+          <div v-if="isOfertante" class="mt-4">
+            <ProjectsTable :projects="projects" />
+          </div>
+        </template>
 
         <!-- Seção Meus Projetos -->
         <div class="mt-10">
@@ -125,10 +151,23 @@ onMounted(() => {
     </main>
     <Footer />
   </div>
+  
 </template>
 
 <style scoped>
-.kv { display:flex; justify-content: space-between; padding: 6px 0; }
-.k { color: rgba(var(--v-theme-on-surface), .7); }
-.v { font-weight: 600; }
+.dashboard-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-row {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+}
 </style>
